@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おウマのかよい</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Table Header Select Styles */
+        .header-select {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.25rem;
+            padding: 0.1rem 0.25rem;
+            font-size: 0.75rem;
+            width: 100%;
+            margin-top: 0.25rem;
+            color: #475569;
+        }
+        .header-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            ring: 1px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useCallback } = React;
+
+        // --- Icons (SVG Components) ---
+        const IconBase = ({ children, className = "", size = 20 }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const UploadIcon = (props) => (
+            <IconBase {...props} size={40}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+            </IconBase>
+        );
+        const ChevronRight = (props) => (
+            <IconBase {...props}><path d="m9 18 6-6-6-6"/></IconBase>
+        );
+        const Calendar = (props) => (
+            <IconBase {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>
+        );
+        const Filter = (props) => (
+            <IconBase {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>
+        );
+        const Activity = (props) => (
+            <IconBase {...props}><path d="M22 12h-4l-3 9L9 3l-6 9H0"/></IconBase>
+        );
+        const X = (props) => (
+            <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 18 12"/></IconBase>
+        );
+        const Edit = (props) => (
+            <IconBase {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>
+        );
+        const Trash2 = (props) => (
+            <IconBase {...props}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>
+        );
+        const Plus = (props) => (
+            <IconBase {...props}><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></IconBase>
+        );
+        const Download = (props) => (
+            <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>
+        );
+
+        // --- Constants & Config ---
+
+        const CLUB_NAMES = {
+            carrot: 'キャロット',
+            silk: 'シルク',
+            win: 'ウイン',
+            tosara: '東サラ'
+        };
+        const CLUB_ORDER = ['carrot', 'silk', 'win', 'tosara'];
+
+        const getClubName = (key) => CLUB_NAMES[key] || key;
+
+        // Item Definitions
+        const ITEM_DEFS = {
+            '出資金':   { direction: 'out', label: '支出', fixed: true },
+            '維持費':   { direction: 'out', label: '支出', fixed: true },
+            '保険料':   { direction: 'out', label: '支出', fixed: true },
+            '分配金':   { direction: 'in',  label: '収入', fixed: true },
+            '充当':     { direction: 'adj', label: '調整', fixed: true },
+            '会費':     { direction: 'out', label: '支出', fixed: true },
+            '入会金':   { direction: 'out', label: '支出', fixed: true },
+            'その他':   { direction: 'out', label: '選択', fixed: false }
+        };
+
+        const HORSE_ITEMS = ['出資金', '維持費', '保険料', '分配金', '充当', 'その他'];
+        const CLUB_ITEMS = ['会費', '入会金', 'その他'];
+
+        const ITEM_ORDER_KEYWORDS = ['出資', '充当', '保険', '維持', '分配', '入会', '会費'];
+        const getItemOrderIndex = (label) => {
+            if (!label) return 999;
+            const index = ITEM_ORDER_KEYWORDS.findIndex(keyword => label.includes(keyword));
+            return index !== -1 ? index : 99;
+        };
+
+        // --- Helper Functions ---
+        const fmtNum = (val) => new Intl.NumberFormat('ja-JP').format(val);
+        const fmtYen = (val) => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(val);
+        
+        // Helper for Balance (Signed number without Yen symbol)
+        const fmtBalance = (val) => {
+            const numStr = new Intl.NumberFormat('ja-JP').format(val);
+            return val > 0 ? `+${numStr}` : numStr;
+        };
+
+        const sortHorses = (a, b) => {
+            if (a.birth_year !== b.birth_year) {
+                return b.birth_year - a.birth_year;
+            }
+            const clubIndexA = CLUB_ORDER.indexOf(a.club);
+            const clubIndexB = CLUB_ORDER.indexOf(b.club);
+            return clubIndexA - clubIndexB;
+        };
+
+        const sanitizeHorse = (horse) => {
+            const { 
+                name, club, birth_year, horse_id, status,
+                totalIncome, totalExpense, totalAssignment, balance, recoveryRate, lastTxDate, uniqueKey, ...rest 
+            } = horse;
+            return { name, club, birth_year, horse_id, status, ...rest };
+        };
+
+        // Club Display Component with Icon
+        const ClubDisplay = ({ club, className = "" }) => {
+            const name = getClubName(club);
+            const hasIcon = ['carrot', 'silk', 'win', 'tosara'].includes(club);
+            
+            return (
+                <div className={`flex items-center gap-1.5 ${className}`}>
+                    {hasIcon && (
+                        <img 
+                            src={`icons/${club}.gif`} 
+                            alt={name} 
+                            className="w-4 h-4 object-contain shrink-0" 
+                            onError={(e) => e.target.style.display = 'none'}
+                        />
+                    )}
+                    <span className="truncate">{name}</span>
+                </div>
+            );
+        };
+
+
+        // --- Main Component ---
+        const HorseOwnerDashboard = () => {
+            const [data, setData] = useState(null);
+            const [activeTab, setActiveTab] = useState('horses');
+            const [selectedHorse, setSelectedHorse] = useState(null);
+            
+            // Edit Mode States
+            const [editSubTab, setEditSubTab] = useState('transactions'); 
+            const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+            const [isHorseModalOpen, setIsHorseModalOpen] = useState(false);
+            const [editingTx, setEditingTx] = useState(null);
+            const [editingHorse, setEditingHorse] = useState(null);
+            const [lastIssueDate, setLastIssueDate] = useState(new Date().toISOString().slice(0, 10));
+
+            // Filters
+            const [filterMonth, setFilterMonth] = useState('');
+            const [filterClub, setFilterClub] = useState('all');
+
+            // Filters - Monthly Tab (Split Year/Month)
+            const [filterYear, setFilterYear] = useState('');
+            const [filterSingleMonth, setFilterSingleMonth] = useState('');
+
+            const [manageFilters, setManageFilters] = useState({
+                issueDate: '',
+                periodYm: '',
+                club: '',
+                horseId: 'all',
+                item: ''
+            });
+
+            // Filters - Horse List Tab
+            const [horseFilterStatus, setHorseFilterStatus] = useState('active');
+            const [horseFilterClub, setHorseFilterClub] = useState('all');
+            const [horseFilterYear, setHorseFilterYear] = useState('all');
+
+            // --- Handlers ---
+
+            const handleFileUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsedData = JSON.parse(e.target.result);
+                            if (parsedData.transactions) {
+                                parsedData.transactions = parsedData.transactions.map(tx => {
+                                    if (tx.raw_label && tx.raw_label.includes('充当')) {
+                                        return { ...tx, direction: 'adj' };
+                                    }
+                                    return tx;
+                                });
+                            }
+                            if (parsedData.horses) {
+                                parsedData.horses = parsedData.horses.map(h => ({
+                                    ...h,
+                                    status: h.status || 'active'
+                                }));
+                            }
+                            setData(parsedData);
+                        } catch (error) {
+                            console.error("JSON parsing error:", error);
+                            alert("ファイルの読み込みに失敗しました。");
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const handleDownload = () => {
+                if (!data) return;
+                const cleanData = {
+                    ...data,
+                    horses: data.horses.map(h => sanitizeHorse(h))
+                };
+                
+                const jsonString = JSON.stringify(cleanData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                link.download = `data${yyyy}${mm}${dd}${hh}${min}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            // CRUD Logic
+            const addTransaction = (newTx) => {
+                setLastIssueDate(newTx.issue_date);
+                setData(prev => ({ ...prev, transactions: [...prev.transactions, newTx] }));
+            };
+            const updateTransaction = (updatedTx, originalTx) => {
+                setLastIssueDate(updatedTx.issue_date);
+                setData(prev => ({ ...prev, transactions: prev.transactions.map(tx => (tx === originalTx ? updatedTx : tx)) }));
+            };
+            const deleteTransaction = (txToDelete) => {
+                if(!confirm("削除してよろしいですか？")) return;
+                setData(prev => ({ ...prev, transactions: prev.transactions.filter(tx => tx !== txToDelete) }));
+            };
+            
+            const addHorse = (newHorse) => {
+                const cleanHorse = sanitizeHorse(newHorse);
+                setData(prev => ({ ...prev, horses: [...prev.horses, cleanHorse] }));
+            };
+            
+            const updateHorse = (updatedHorse, originalHorse) => {
+                const cleanHorse = sanitizeHorse(updatedHorse);
+                setData(prev => {
+                    let newTransactions = prev.transactions;
+                    if (originalHorse.horse_id !== cleanHorse.horse_id) {
+                        newTransactions = prev.transactions.map(tx => 
+                            tx.horse_id === originalHorse.horse_id 
+                            ? { ...tx, horse_id: cleanHorse.horse_id } 
+                            : tx
+                        );
+                    }
+                    const newHorses = prev.horses.map(h => 
+                        h.horse_id === originalHorse.horse_id ? cleanHorse : h
+                    );
+                    return { ...prev, horses: newHorses, transactions: newTransactions };
+                });
+            };
+            
+            const deleteHorse = (horseToDelete) => {
+                if(!confirm("この馬を削除しますか？\n※紐づく明細がある場合、それらの明細は馬とのリンクが切れます。")) return;
+                setData(prev => ({ 
+                    ...prev, 
+                    horses: prev.horses.filter(h => h.horse_id !== horseToDelete.horse_id) 
+                }));
+            };
+
+            // --- Data Processing ---
+
+            const horseStats = useMemo(() => {
+                if (!data) return [];
+                return data.horses.map((horse, index) => {
+                    const relatedTx = data.transactions.filter(tx => tx.horse_id === horse.horse_id);
+                    const totalIncome = relatedTx.filter(tx => tx.direction === 'in' && (!tx.raw_label || !tx.raw_label.includes('充当'))).reduce((sum, tx) => sum + tx.amount_yen, 0);
+                    const totalExpenseRaw = relatedTx.filter(tx => tx.direction === 'out').reduce((sum, tx) => sum + tx.amount_yen, 0);
+                    const totalAssignment = relatedTx.filter(tx => tx.direction === 'adj').reduce((sum, tx) => sum + tx.amount_yen, 0);
+                    const balance = totalIncome - totalExpenseRaw;
+                    const denominator = totalExpenseRaw + totalAssignment;
+                    const recoveryRate = denominator > 0 ? (totalIncome / denominator) * 100 : 0;
+                    const lastTxDate = relatedTx.length > 0 ? relatedTx.sort((a, b) => new Date(b.period_ym) - new Date(a.period_ym))[0].period_ym : '-';
+                    return {
+                        ...horse,
+                        uniqueKey: `${horse.horse_id}-${index}`, 
+                        totalIncome,
+                        totalExpense: totalExpenseRaw,
+                        totalAssignment,
+                        balance,
+                        recoveryRate,
+                        lastTxDate
+                    };
+                }).sort(sortHorses);
+            }, [data]);
+
+            const selectedHorseData = useMemo(() => {
+                if (!selectedHorse || !data) return null;
+                const stats = horseStats.find(h => h.horse_id === selectedHorse.horse_id);
+                if (!stats) return null; 
+
+                const txs = data.transactions.filter(tx => tx.horse_id === selectedHorse.horse_id && tx.direction !== 'adj').sort((a, b) => new Date(a.period_ym) - new Date(b.period_ym));
+                return { txs, ...stats };
+            }, [selectedHorse, data, horseStats]);
+
+            // --- Filtered Transactions for Views ---
+
+            const filteredTransactions = useMemo(() => {
+                if (!data) return [];
+                let filtered = data.transactions;
+                
+                if (filterYear) {
+                    filtered = filtered.filter(tx => tx.period_ym.startsWith(filterYear));
+                }
+                if (filterSingleMonth) {
+                    filtered = filtered.filter(tx => tx.period_ym.endsWith(filterSingleMonth));
+                }
+                
+                if (filterClub !== 'all') filtered = filtered.filter(tx => tx.club === filterClub);
+                
+                return filtered.sort((a, b) => {
+                    if (a.period_ym !== b.period_ym) return b.period_ym.localeCompare(a.period_ym);
+                    const clubA = CLUB_ORDER.indexOf(a.club);
+                    const clubB = CLUB_ORDER.indexOf(b.club);
+                    if (clubA !== clubB) return clubA - clubB;
+                    const horseA = data.horses.find(h => h.horse_id === a.horse_id);
+                    const horseB = data.horses.find(h => h.horse_id === b.horse_id);
+                    if (!horseA && horseB) return 1;
+                    if (horseA && !horseB) return -1;
+                    if (horseA && horseB) {
+                        return sortHorses(horseA, horseB) * -1;
+                    }
+                    return getItemOrderIndex(a.raw_label) - getItemOrderIndex(b.raw_label);
+                });
+            }, [data, filterYear, filterSingleMonth, filterClub]);
+
+            const monthlyReport = useMemo(() => {
+                 const summary = filteredTransactions.reduce((acc, tx) => {
+                    if (tx.direction === 'in') acc.in += tx.amount_yen;
+                    if (tx.direction === 'out') acc.out += tx.amount_yen;
+                    return acc;
+                }, { in: 0, out: 0, total: 0 });
+                summary.total = summary.in - summary.out;
+                return {
+                    transactions: filteredTransactions.map((tx, idx) => ({...tx, uniqueId: `tx-${idx}`, originalRef: tx})),
+                    summary: summary
+                };
+            }, [filteredTransactions]);
+
+            const filteredManageTransactions = useMemo(() => {
+                if (!data) return [];
+                let filtered = data.transactions;
+
+                if (manageFilters.issueDate) filtered = filtered.filter(tx => tx.issue_date === manageFilters.issueDate);
+                if (manageFilters.periodYm) filtered = filtered.filter(tx => tx.period_ym === manageFilters.periodYm);
+                if (manageFilters.club) filtered = filtered.filter(tx => tx.club === manageFilters.club);
+                if (manageFilters.item) filtered = filtered.filter(tx => tx.raw_label === manageFilters.item);
+                
+                if (manageFilters.horseId && manageFilters.horseId !== 'all') {
+                    if (manageFilters.horseId === 'none') {
+                        filtered = filtered.filter(tx => !tx.horse_id);
+                    } else {
+                        filtered = filtered.filter(tx => tx.horse_id === manageFilters.horseId);
+                    }
+                }
+
+                return filtered.sort((a, b) => {
+                    if (a.period_ym !== b.period_ym) return b.period_ym.localeCompare(a.period_ym);
+                    const clubA = CLUB_ORDER.indexOf(a.club);
+                    const clubB = CLUB_ORDER.indexOf(b.club);
+                    if (clubA !== clubB) return clubA - clubB;
+                    const horseA = data.horses.find(h => h.horse_id === a.horse_id);
+                    const horseB = data.horses.find(h => h.horse_id === b.horse_id);
+                    if (!horseA && horseB) return 1;
+                    if (horseA && !horseB) return -1;
+                    if (horseA && horseB) {
+                        if (horseA.birth_year !== horseB.birth_year) return horseA.birth_year - horseB.birth_year;
+                        return horseA.name.localeCompare(horseB.name);
+                    }
+                    return getItemOrderIndex(a.raw_label) - getItemOrderIndex(b.raw_label);
+                });
+            }, [data, manageFilters]);
+
+            const manageTransactionsList = useMemo(() => {
+                return filteredManageTransactions.map((tx, idx) => ({...tx, uniqueId: `mtx-${idx}`, originalRef: tx}));
+            }, [filteredManageTransactions]);
+
+            // Filtered Horse Stats
+            const filteredHorseStats = useMemo(() => {
+                if (!data) return [];
+                let filtered = horseStats;
+                
+                if (horseFilterStatus !== 'all') filtered = filtered.filter(h => h.status === horseFilterStatus);
+                if (horseFilterClub !== 'all') filtered = filtered.filter(h => h.club === horseFilterClub);
+                if (horseFilterYear !== 'all') filtered = filtered.filter(h => h.birth_year === Number(horseFilterYear));
+                
+                return filtered;
+            }, [horseStats, horseFilterStatus, horseFilterClub, horseFilterYear]);
+
+
+            // --- Options for Dropdowns ---
+            const uniqueOptions = useMemo(() => {
+                if (!data) return { years: [], months: [], clubs: [] };
+                const years = [...new Set(data.transactions.map(t => t.period_ym.substring(0, 4)).filter(Boolean))].sort().reverse();
+                const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                const clubs = [...new Set(data.transactions.map(t => t.club).filter(Boolean))];
+                return { years, months, clubs };
+            }, [data]);
+
+            const uniqueBirthYears = useMemo(() => {
+                if (!data) return [];
+                return [...new Set(data.horses.map(h => h.birth_year))].sort((a, b) => b - a);
+            }, [data]);
+
+            const manageUniqueOptions = useMemo(() => {
+                if (!data) return { issueDates: [], periodYms: [], clubs: [], items: [], horses: [] };
+                
+                let issueDateSource = data.transactions;
+                if (manageFilters.periodYm) {
+                    issueDateSource = issueDateSource.filter(t => t.period_ym === manageFilters.periodYm);
+                }
+                const issueDates = [...new Set(issueDateSource.map(t => t.issue_date).filter(Boolean))].sort().reverse();
+
+                const periodYms = [...new Set(data.transactions.map(t => t.period_ym).filter(Boolean))].sort().reverse();
+                const clubs = [...new Set(data.transactions.map(t => t.club).filter(Boolean))];
+                const items = [...new Set(data.transactions.map(t => t.raw_label).filter(Boolean))].sort();
+                
+                let availableHorses = data.horses;
+                if (manageFilters.club) {
+                    availableHorses = availableHorses.filter(h => h.club === manageFilters.club);
+                }
+                
+                const horses = availableHorses
+                    .sort(sortHorses)
+                    .map(h => ({ id: h.horse_id, name: h.name, birth_year: h.birth_year }));
+
+                return { issueDates, periodYms, clubs, items, horses };
+            }, [data, manageFilters.periodYm, manageFilters.club]);
+
+
+            // --- Modals ---
+
+            const TransactionModal = () => {
+                if (!isTxModalOpen) return null;
+
+                const [form, setForm] = useState(editingTx ? { ...editingTx } : {
+                    issue_date: lastIssueDate,
+                    period_ym: (filterYear && filterSingleMonth) ? `${filterYear}-${filterSingleMonth}` : new Date().toISOString().slice(0, 7),
+                    club: filterClub !== 'all' ? filterClub : 'carrot',
+                    horse_id: '',
+                    category: 'other',
+                    direction: 'out',
+                    amount_yen: 0,
+                    raw_label: '会費',
+                    memo: ''
+                });
+
+                const availableItems = form.horse_id ? HORSE_ITEMS : CLUB_ITEMS;
+
+                const clubHorses = data.horses
+                    .filter(h => h.club === form.club)
+                    .sort(sortHorses);
+
+                const handleTargetChange = (key, value) => {
+                    const next = { ...form, [key]: value };
+                    if (key === 'club') {
+                        next.horse_id = ''; 
+                        next.raw_label = '会費';
+                    }
+                    if (key === 'horse_id') {
+                        if (value) {
+                            if (!HORSE_ITEMS.includes(next.raw_label)) next.raw_label = '維持費';
+                        } else {
+                            if (!CLUB_ITEMS.includes(next.raw_label)) next.raw_label = '会費';
+                        }
+                    }
+                    const def = ITEM_DEFS[next.raw_label];
+                    if (def) next.direction = def.direction;
+                    setForm(next);
+                };
+
+                const handleItemChange = (label) => {
+                    const def = ITEM_DEFS[label];
+                    const next = { ...form, raw_label: label };
+                    if (def) next.direction = def.direction;
+                    setForm(next);
+                };
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    const payload = { ...form, amount_yen: Number(form.amount_yen) };
+                    if (payload.horse_id === '') payload.horse_id = null;
+
+                    if (editingTx) {
+                        updateTransaction(payload, editingTx); 
+                    } else {
+                        addTransaction(payload);
+                    }
+                    setIsTxModalOpen(false);
+                };
+
+                const currentItemDef = ITEM_DEFS[form.raw_label] || ITEM_DEFS['その他'];
+
+                return (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                            <h3 className="text-lg font-bold mb-4 text-slate-800">{editingTx ? '明細を編集' : '明細を追加'}</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">発行日</label><input type="date" required className="w-full border rounded p-2" value={form.issue_date} onChange={e => setForm({...form, issue_date: e.target.value})} /></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">年月</label><input type="month" required className="w-full border rounded p-2" value={form.period_ym} onChange={e => setForm({...form, period_ym: e.target.value})} /></div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">クラブ</label><select className="w-full border rounded p-2" value={form.club} onChange={e => handleTargetChange('club', e.target.value)}>{Object.keys(CLUB_NAMES).map(k => <option key={k} value={k}>{CLUB_NAMES[k]}</option>)}</select></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">対象馬</label><select className="w-full border rounded p-2" value={form.horse_id || ''} onChange={e => handleTargetChange('horse_id', e.target.value)}><option value="">（会費・その他）</option>{clubHorses.map(h => <option key={h.horse_id} value={h.horse_id}>{h.name}</option>)}</select></div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">項目</label><select required className="w-full border rounded p-2" value={form.raw_label} onChange={e => handleItemChange(e.target.value)}>{availableItems.map(item => <option key={item} value={item}>{item}</option>)}</select></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">収支/調整</label><div className="flex bg-slate-100 rounded p-1 h-[42px] items-center">{currentItemDef.fixed ? (<div className="w-full text-center font-bold text-slate-600 text-sm">{currentItemDef.label}</div>) : (<><button type="button" className={`flex-1 h-full rounded text-sm ${form.direction === 'out' ? 'bg-white shadow text-red-600 font-bold' : 'text-slate-500'}`} onClick={() => setForm({...form, direction: 'out'})}>支出</button><button type="button" className={`flex-1 h-full rounded text-sm ${form.direction === 'in' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`} onClick={() => setForm({...form, direction: 'in'})}>収入</button></>)}</div></div>
+                                </div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">金額 (円)</label><input type="number" required min="0" className="w-full border rounded p-2 text-right font-mono text-lg" value={form.amount_yen} onFocus={(e) => e.target.select()} onChange={e => setForm({...form, amount_yen: e.target.value})} /></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">メモ</label><input type="text" className="w-full border rounded p-2" value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} /></div>
+                                <div className="flex gap-3 pt-4 border-t"><button type="button" onClick={() => setIsTxModalOpen(false)} className="flex-1 px-4 py-2 border rounded hover:bg-slate-50">キャンセル</button><button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">保存</button></div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            const HorseModal = () => {
+                if (!isHorseModalOpen) return null;
+                const [form, setForm] = useState(editingHorse ? { ...editingHorse } : { name: '', birth_year: 2022, club: 'carrot', horse_id: '', status: 'active' });
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    const payload = { ...form, birth_year: Number(form.birth_year) };
+                    if (!payload.horse_id) payload.horse_id = `${payload.club}_${payload.birth_year}_${Math.floor(Math.random()*100000)}`;
+                    if (editingHorse) updateHorse(payload, editingHorse); else addHorse(payload);
+                    setIsHorseModalOpen(false);
+                };
+                return (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                            <h3 className="text-lg font-bold mb-4 text-slate-800">{editingHorse ? '愛馬を編集' : '愛馬を追加'}</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">ID (horse_id)</label><input type="text" required className="w-full border rounded p-2 font-mono" value={form.horse_id} onFocus={(e) => e.target.select()} onChange={e => setForm({...form, horse_id: e.target.value})} placeholder="例: carrot_2021_abc" /></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">馬名</label><input type="text" required className="w-full border rounded p-2" value={form.name} onFocus={(e) => e.target.select()} onChange={e => setForm({...form, name: e.target.value})} /></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">生年</label><input type="number" required className="w-full border rounded p-2" value={form.birth_year} onFocus={(e) => e.target.select()} onChange={e => setForm({...form, birth_year: e.target.value})} /></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">クラブ</label><select className="w-full border rounded p-2" value={form.club} onChange={e => setForm({...form, club: e.target.value})}>{Object.keys(CLUB_NAMES).map(k => <option key={k} value={k}>{CLUB_NAMES[k]}</option>)}</select></div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">状態</label>
+                                    <select className="w-full border rounded p-2" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+                                        <option value="active">現役</option>
+                                        <option value="retired">引退</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 pt-4 border-t"><button type="button" onClick={() => setIsHorseModalOpen(false)} className="flex-1 px-4 py-2 border rounded hover:bg-slate-50">キャンセル</button><button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">保存</button></div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            if (!data) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-8 font-sans">
+                        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
+                            <div className="bg-blue-100 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6"><UploadIcon className="text-blue-600" /></div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">データを読み込む</h2>
+                            <p className="text-slate-500 mb-8">一口馬主のJSONデータ（data-sm.json）を選択してください。<br/><span className="text-xs text-slate-400">※データはブラウザ内でのみ処理されます</span></p>
+                            <label className="block w-full group cursor-pointer"><div className="flex items-center justify-center w-full px-6 py-4 border-2 border-blue-500 border-dashed rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors"><span className="text-blue-600 font-semibold">ファイルを選択</span></div><input type="file" accept=".json" onChange={handleFileUpload} className="hidden" /></label>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (selectedHorse && activeTab !== 'manage') {
+                return (
+                    <div className="h-screen bg-slate-50 flex flex-col font-sans overflow-hidden">
+                        <div className="bg-white border-b border-slate-200 p-4 shrink-0 shadow-sm z-20">
+                            <div className="max-w-7xl mx-auto w-full">
+                                <button onClick={() => setSelectedHorse(null)} className="mb-4 flex items-center text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"><ChevronRight className="w-4 h-4 rotate-180 mr-1" /> 一覧に戻る</button>
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase flex items-center gap-1 ${
+                                                selectedHorse.club === 'carrot' ? 'bg-green-100 text-green-700' : 
+                                                selectedHorse.club === 'silk' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
+                                            }`}>
+                                                <ClubDisplay club={selectedHorse.club} className="" />
+                                            </span>
+                                            <span className="text-slate-500 text-xs">{selectedHorse.birth_year}年産</span>
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-slate-900">{selectedHorse.name}</h1>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-4 text-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <div><div className="text-[10px] text-slate-400 mb-0.5">収支</div><div className={`font-bold text-lg ${selectedHorseData.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(selectedHorseData.balance)}</div></div>
+                                        <div><div className="text-[10px] text-slate-400 mb-0.5">収入</div><div className="font-normal text-blue-600 text-base">{fmtNum(selectedHorseData.totalIncome)}</div></div>
+                                        <div><div className="text-[10px] text-slate-400 mb-0.5">支出</div><div className="flex flex-col items-center"><div className="font-normal text-red-500 text-base leading-tight">{fmtNum(selectedHorseData.totalExpense)}</div>{selectedHorseData.totalAssignment > 0 && <span className="text-[9px] text-slate-400 whitespace-nowrap">充当: {fmtNum(selectedHorseData.totalAssignment)}</span>}</div></div>
+                                        <div><div className="text-[10px] text-slate-400 mb-0.5">回収率</div><div className={`font-bold text-lg ${selectedHorseData.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{selectedHorseData.recoveryRate.toFixed(1)}%</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-hidden flex flex-col p-4 md:p-8">
+                            <div className="max-w-7xl mx-auto w-full flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                    <table className="w-full text-sm text-left relative border-collapse whitespace-nowrap">
+                                        <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                            <tr><th className="px-6 py-3 w-32 bg-slate-50 whitespace-nowrap">年月</th><th className="px-4 py-3 bg-slate-50 w-24 whitespace-nowrap">項目</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">支出</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">収入</th><th className="px-6 py-3 bg-slate-50 w-full">メモ</th></tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {[...selectedHorseData.txs].reverse().map((tx, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="px-6 py-3 font-medium text-slate-700">{tx.period_ym}</td><td className="px-4 py-3 text-slate-700">{tx.raw_label}</td><td className="px-6 py-3 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-3 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-3 text-slate-500 text-xs truncate max-w-0" title={tx.memo}>{tx.memo}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+                    <header className="bg-white border-b border-slate-200 shrink-0 z-20">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between h-16">
+                                <div className="flex items-center"><span className="font-bold text-xl tracking-tight">おウマのかよい</span></div>
+                                <div className="flex items-center space-x-4"><button onClick={() => setData(null)} className="text-sm text-slate-500 hover:text-slate-800 flex items-center"><X className="w-4 h-4 mr-1" /> ファイル解除</button></div>
+                            </div>
+                        </div>
+                    </header>
+                    <main className="flex-1 overflow-hidden flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
+                            <div className="flex space-x-1 bg-slate-200 p-1 rounded-lg">
+                                <button onClick={() => setActiveTab('horses')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'horses' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>愛馬一覧</button>
+                                <button onClick={() => setActiveTab('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>クラブ明細</button>
+                                <button onClick={() => setActiveTab('manage')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center ${activeTab === 'manage' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}><Edit className="w-4 h-4 mr-1"/> 台帳</button>
+                            </div>
+                            <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><Download className="w-4 h-4 mr-2" /> 保存</button>
+                        </div>
+
+                        {activeTab === 'horses' && (
+                            <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+                                <div className="shrink-0 space-y-4">
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center">
+                                        <div className="flex items-center gap-2 mr-4">
+                                            {/* Status Filter - Radio Buttons */}
+                                            <label className="flex items-center space-x-1 cursor-pointer">
+                                                <input type="radio" name="statusFilter" value="all" checked={horseFilterStatus === 'all'} onChange={(e) => setHorseFilterStatus(e.target.value)} className="form-radio text-blue-600" />
+                                                <span className="text-sm text-slate-700">全馬</span>
+                                            </label>
+                                            <label className="flex items-center space-x-1 cursor-pointer">
+                                                <input type="radio" name="statusFilter" value="active" checked={horseFilterStatus === 'active'} onChange={(e) => setHorseFilterStatus(e.target.value)} className="form-radio text-blue-600" />
+                                                <span className="text-sm text-slate-700">現役馬</span>
+                                            </label>
+                                            <label className="flex items-center space-x-1 cursor-pointer">
+                                                <input type="radio" name="statusFilter" value="retired" checked={horseFilterStatus === 'retired'} onChange={(e) => setHorseFilterStatus(e.target.value)} className="form-radio text-blue-600" />
+                                                <span className="text-sm text-slate-700">引退馬</span>
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <select value={horseFilterClub} onChange={(e) => setHorseFilterClub(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5">
+                                                <option value="all">クラブ</option>
+                                                {Object.keys(CLUB_NAMES).map(k => <option key={k} value={k}>{CLUB_NAMES[k]}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <select value={horseFilterYear} onChange={(e) => setHorseFilterYear(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5">
+                                                <option value="all">生年</option>
+                                                {uniqueBirthYears.map(y => <option key={y} value={y}>{y}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                                <tr><th className="px-6 py-4 bg-slate-50">馬名</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th className="px-6 py-4 text-right bg-slate-50">収支</th><th className="px-6 py-4 text-right bg-slate-50">回収率</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {filteredHorseStats.map((horse) => (
+                                                    <tr key={horse.uniqueKey} onClick={() => setSelectedHorse(horse)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                                                        <td className="px-6 py-4 font-bold text-slate-800 group-hover:text-blue-600">{horse.name}</td>
+                                                        <td className="px-6 py-4 text-slate-600">
+                                                            <ClubDisplay club={horse.club} />
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center text-slate-500">{horse.birth_year}</td><td className={`px-6 py-4 text-right font-bold ${horse.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(horse.balance)}</td><td className={`px-6 py-4 text-right font-medium ${horse.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{horse.recoveryRate.toFixed(1)}%</td><td className="px-6 py-4 text-right text-slate-400 text-xs">{horse.lastTxDate}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'monthly' && (
+                            <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+                                <div className="shrink-0 space-y-4">
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center">
+                                        <div className="flex items-center gap-2"><Calendar className="text-slate-400" />
+                                            <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5">
+                                                <option value="">年</option>
+                                                {uniqueOptions.years.map(y => <option key={y} value={y}>{y}</option>)}
+                                            </select>
+                                            <select value={filterSingleMonth} onChange={(e) => setFilterSingleMonth(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5">
+                                                <option value="">月</option>
+                                                {uniqueOptions.months.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2"><Filter className="text-slate-400" /><select value={filterClub} onChange={(e) => setFilterClub(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5"><option value="all">クラブ</option>{uniqueOptions.clubs.map(c => <option key={c} value={c}>{getClubName(c)}</option>)}</select></div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p className="text-xs text-slate-500 mb-1">支出</p><p className="text-xl font-normal text-red-500">{fmtYen(monthlyReport.summary.out)}</p></div>
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p className="text-xs text-slate-500 mb-1">収入</p><p className="text-xl font-normal text-blue-600">{fmtYen(monthlyReport.summary.in)}</p></div>
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p className="text-xs text-slate-500 mb-1">収支</p><p className={`text-xl font-normal ${monthlyReport.summary.total >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{monthlyReport.summary.total > 0 && '+'}{fmtYen(monthlyReport.summary.total)}</p></div>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                                <tr>{!filterYear && !filterSingleMonth && <th className="px-6 py-4 w-24 bg-slate-50">年月</th>}{filterClub === 'all' && <th className="px-6 py-4 w-28 bg-slate-50">クラブ</th>}<th className="px-6 py-4 min-w-[150px] bg-slate-50">対象馬</th><th className="px-4 py-4 w-24 bg-slate-50">項目</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">支出</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">収入</th><th className="px-6 py-4 w-full bg-slate-50">メモ</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {monthlyReport.transactions.map((tx) => {
+                                                    const horse = data.horses.find(h => h.horse_id === tx.horse_id);
+                                                    return (
+                                                        <tr key={tx.uniqueId} className="hover:bg-slate-50 transition-colors">
+                                                            {!filterYear && !filterSingleMonth && <td className="px-6 py-4 text-slate-600">{tx.period_ym}</td>}{filterClub === 'all' && <td className="px-6 py-4"><div className="inline-flex px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600"><ClubDisplay club={tx.club} /></div></td>}<td className="px-6 py-4 font-medium text-slate-800">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-4 text-slate-600">{tx.raw_label}</td><td className="px-6 py-4 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-slate-500 text-xs truncate max-w-0" title={tx.memo}>{tx.memo}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'manage' && (
+                            <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+                                <div className="flex gap-4 shrink-0">
+                                    <div className="flex p-1 bg-slate-100 rounded-lg"><button onClick={() => setEditSubTab('transactions')} className={`px-3 py-1.5 text-sm rounded-md ${editSubTab === 'transactions' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>明細リスト</button><button onClick={() => setEditSubTab('horses')} className={`px-3 py-1.5 text-sm rounded-md ${editSubTab === 'horses' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>愛馬リスト</button></div>
+                                    <button onClick={() => { if(editSubTab === 'transactions') { setEditingTx(null); setIsTxModalOpen(true); } else { setEditingHorse(null); setIsHorseModalOpen(true); }}} className="ml-auto flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold"><Plus className="w-4 h-4 mr-1"/> 新規追加</button>
+                                </div>
+                                <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                                <tr>
+                                                    {editSubTab === 'transactions' ? (
+                                                        <>
+                                                            <th className="px-4 py-3 bg-slate-50 min-w-[70px]">操作</th>
+                                                            <th className="px-4 py-3 bg-slate-50">
+                                                                <div>発行日</div>
+                                                                <select className="header-select" value={manageFilters.issueDate} onChange={e => setManageFilters({...manageFilters, issueDate: e.target.value})}>
+                                                                    <option value="">全て</option>
+                                                                    {manageUniqueOptions.issueDates.map(d => <option key={d} value={d}>{d}</option>)}
+                                                                </select>
+                                                            </th>
+                                                            <th className="px-4 py-3 bg-slate-50">
+                                                                <div>年月</div>
+                                                                <select className="header-select" value={manageFilters.periodYm} onChange={e => setManageFilters({...manageFilters, periodYm: e.target.value})}>
+                                                                    <option value="">全て</option>
+                                                                    {manageUniqueOptions.periodYms.map(ym => <option key={ym} value={ym}>{ym}</option>)}
+                                                                </select>
+                                                            </th>
+                                                            <th className="px-4 py-3 bg-slate-50">
+                                                                <div>クラブ</div>
+                                                                <select className="header-select" value={manageFilters.club} onChange={e => setManageFilters({...manageFilters, club: e.target.value})}>
+                                                                    <option value="">全て</option>
+                                                                    {manageUniqueOptions.clubs.map(c => <option key={c} value={c}>{getClubName(c)}</option>)}
+                                                                </select>
+                                                            </th>
+                                                            <th className="px-4 py-3 bg-slate-50">
+                                                                <div>対象馬</div>
+                                                                <select className="header-select" value={manageFilters.horseId} onChange={e => setManageFilters({...manageFilters, horseId: e.target.value})}>
+                                                                    <option value="all">全て</option>
+                                                                    <option value="none">（会費・その他）</option>
+                                                                    {manageUniqueOptions.horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                                                                </select>
+                                                            </th>
+                                                            <th className="px-4 py-3 bg-slate-50">
+                                                                <div>項目</div>
+                                                                <select className="header-select" value={manageFilters.item} onChange={e => setManageFilters({...manageFilters, item: e.target.value})}>
+                                                                    <option value="">全て</option>
+                                                                    {manageUniqueOptions.items.map(i => <option key={i} value={i}>{i}</option>)}
+                                                                </select>
+                                                            </th>
+                                                            <th className="px-4 py-3 bg-slate-50 text-right">金額</th>
+                                                            <th className="px-4 py-3 bg-slate-50">メモ</th>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <th className="px-6 py-4 bg-slate-50">操作</th>
+                                                            <th className="px-6 py-4 bg-slate-50">状態</th>
+                                                            <th className="px-6 py-4 bg-slate-50">馬名</th>
+                                                            <th className="px-6 py-4 bg-slate-50">クラブ</th>
+                                                            <th className="px-6 py-4 bg-slate-50">生年</th>
+                                                            <th className="px-6 py-4 bg-slate-50">ID</th>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {editSubTab === 'transactions' ? (
+                                                    manageTransactionsList.map((tx) => {
+                                                        const horse = data.horses.find(h => h.horse_id === tx.horse_id);
+                                                        return (
+                                                            <tr key={tx.uniqueId} className="hover:bg-slate-50">
+                                                                <td className="px-4 py-3 flex gap-2"><button onClick={() => { setEditingTx(tx.originalRef); setIsTxModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteTransaction(tx.originalRef)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td><td className="px-4 py-3 text-slate-600">{tx.issue_date}</td><td className="px-4 py-3 text-slate-600">{tx.period_ym}</td><td className="px-4 py-3 text-slate-600"><ClubDisplay club={tx.club} /></td><td className="px-4 py-3 font-medium">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-3">{tx.raw_label}</td><td className={`px-4 py-3 text-right font-bold ${tx.direction === 'in' ? 'text-blue-600' : tx.direction === 'adj' ? 'text-emerald-600' : 'text-red-500'}`}>{fmtNum(tx.amount_yen)}</td><td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{tx.memo}</td>
+                                                            </tr>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    horseStats.map((horse) => (
+                                                        <tr key={horse.uniqueKey} className="hover:bg-slate-50">
+                                                            <td className="px-6 py-4 flex gap-2"><button onClick={() => { setEditingHorse(horse); setIsHorseModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteHorse(horse)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
+                                                            <td className="px-6 py-4">
+                                                                <span className={`px-2 py-1 text-xs rounded-full ${horse.status === 'retired' ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-700'}`}>
+                                                                    {horse.status === 'retired' ? '引退' : '現役'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 font-bold">{horse.name}</td>
+                                                            <td className="px-6 py-4 text-slate-600">
+                                                                <ClubDisplay club={horse.club} />
+                                                            </td>
+                                                            <td className="px-6 py-4">{horse.birth_year}</td><td className="px-6 py-4 text-xs text-slate-400 font-mono">{horse.horse_id}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <TransactionModal />
+                        <HorseModal />
+
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HorseOwnerDashboard />);
+    </script>
+</body>
+</html>
