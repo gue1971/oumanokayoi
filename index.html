@@ -129,9 +129,11 @@
             carrot: 'キャロット',
             silk: 'シルク',
             win: 'ウイン',
-            tosara: '東サラ'
+            tosara: '東サラ',
+            norm: 'ノルマンディー',
+            union: 'ユニオン'
         };
-        const CLUB_ORDER = ['carrot', 'silk', 'win', 'tosara'];
+        const CLUB_ORDER = ['carrot', 'silk', 'win', 'tosara', 'norm', 'union'];
 
         const getClubName = (key) => CLUB_NAMES[key] || key;
 
@@ -187,7 +189,7 @@
         // Club Display Component with Icon
         const ClubDisplay = ({ club, className = "" }) => {
             const name = getClubName(club);
-            const hasIcon = ['carrot', 'silk', 'win', 'tosara'].includes(club);
+            const hasIcon = ['carrot', 'silk', 'win', 'tosara', 'norm', 'union'].includes(club);
             
             return (
                 <div className={`flex items-center gap-1.5 ${className}`}>
