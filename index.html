@@ -220,6 +220,9 @@
             const [editingTx, setEditingTx] = useState(null);
             const [editingHorse, setEditingHorse] = useState(null);
             const [lastIssueDate, setLastIssueDate] = useState(new Date().toISOString().slice(0, 10));
+            // 直前の入力値を保持するためのStateを追加
+            const [lastPeriodYm, setLastPeriodYm] = useState(null);
+            const [lastClub, setLastClub] = useState(null);
 
             // Filters
             const [filterMonth, setFilterMonth] = useState('');
@@ -303,10 +306,14 @@
             // CRUD Logic
             const addTransaction = (newTx) => {
                 setLastIssueDate(newTx.issue_date);
+                setLastPeriodYm(newTx.period_ym);
+                setLastClub(newTx.club);
                 setData(prev => ({ ...prev, transactions: [...prev.transactions, newTx] }));
             };
             const updateTransaction = (updatedTx, originalTx) => {
                 setLastIssueDate(updatedTx.issue_date);
+                setLastPeriodYm(updatedTx.period_ym);
+                setLastClub(updatedTx.club);
                 setData(prev => ({ ...prev, transactions: prev.transactions.map(tx => (tx === originalTx ? updatedTx : tx)) }));
             };
             const deleteTransaction = (txToDelete) => {
@@ -522,8 +529,9 @@
 
                 const [form, setForm] = useState(editingTx ? { ...editingTx } : {
                     issue_date: lastIssueDate,
-                    period_ym: (filterYear && filterSingleMonth) ? `${filterYear}-${filterSingleMonth}` : new Date().toISOString().slice(0, 7),
-                    club: filterClub !== 'all' ? filterClub : 'carrot',
+                    // 直前の入力があればそれを優先、なければフィルターや現在年月を使用
+                    period_ym: lastPeriodYm ?? ((filterYear && filterSingleMonth) ? `${filterYear}-${filterSingleMonth}` : new Date().toISOString().slice(0, 7)),
+                    club: lastClub ?? (filterClub !== 'all' ? filterClub : 'carrot'),
                     horse_id: '',
                     category: 'other',
                     direction: 'out',
