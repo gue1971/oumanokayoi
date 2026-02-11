@@ -469,6 +469,15 @@
                 return filteredManageTransactions.map((tx, idx) => ({...tx, uniqueId: `mtx-${idx}`, originalRef: tx}));
             }, [filteredManageTransactions]);
 
+            // Add Summary Calculation for Manage Tab
+            const manageSummary = useMemo(() => {
+                return filteredManageTransactions.reduce((acc, tx) => {
+                    if (tx.direction === 'in') acc.in += tx.amount_yen;
+                    if (tx.direction === 'out') acc.out += tx.amount_yen;
+                    return acc;
+                }, { in: 0, out: 0 });
+            }, [filteredManageTransactions]);
+
             // Filtered Horse Stats
             const filteredHorseStats = useMemo(() => {
                 if (!data) return [];
@@ -832,9 +841,18 @@
 
                         {activeTab === 'manage' && (
                             <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
-                                <div className="flex gap-4 shrink-0">
-                                    <div className="flex p-1 bg-slate-100 rounded-lg"><button onClick={() => setEditSubTab('transactions')} className={`px-3 py-1.5 text-sm rounded-md ${editSubTab === 'transactions' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>明細リスト</button><button onClick={() => setEditSubTab('horses')} className={`px-3 py-1.5 text-sm rounded-md ${editSubTab === 'horses' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>愛馬リスト</button></div>
-                                    <button onClick={() => { if(editSubTab === 'transactions') { setEditingTx(null); setIsTxModalOpen(true); } else { setEditingHorse(null); setIsHorseModalOpen(true); }}} className="ml-auto flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold"><Plus className="w-4 h-4 mr-1"/> 新規追加</button>
+                                <div className="flex gap-4 shrink-0 items-center">
+                                    <div className="flex p-1 bg-slate-100 rounded-lg shrink-0"><button onClick={() => setEditSubTab('transactions')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'transactions' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>明細リスト</button><button onClick={() => setEditSubTab('horses')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'horses' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>愛馬リスト</button></div>
+                                    
+                                    {editSubTab === 'transactions' && (
+                                        <div className="flex items-center gap-3 text-sm bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm whitespace-nowrap overflow-hidden">
+                                            <div className="flex items-center gap-1"><span className="text-xs text-slate-400">支出</span><span className="font-bold text-red-500">{fmtNum(manageSummary.out)}</span></div>
+                                            <div className="w-px h-3 bg-slate-200"></div>
+                                            <div className="flex items-center gap-1"><span className="text-xs text-slate-400">収入</span><span className="font-bold text-blue-600">{fmtNum(manageSummary.in)}</span></div>
+                                        </div>
+                                    )}
+
+                                    <button onClick={() => { if(editSubTab === 'transactions') { setEditingTx(null); setIsTxModalOpen(true); } else { setEditingHorse(null); setIsHorseModalOpen(true); }}} className="ml-auto flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold shrink-0 whitespace-nowrap"><Plus className="w-4 h-4 mr-1"/> 新規追加</button>
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
