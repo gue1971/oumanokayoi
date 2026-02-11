@@ -291,7 +291,8 @@
                 const dd = String(now.getDate()).padStart(2, '0');
                 const hh = String(now.getHours()).padStart(2, '0');
                 const min = String(now.getMinutes()).padStart(2, '0');
-                link.download = `data${yyyy}${mm}${dd}${hh}${min}.json`;
+                // Windowsではコロン(:)がファイル名に使用できないためハイフン(-)を使用
+                link.download = `ka${yyyy}-${mm}-${dd}-${hh}-${min}.json`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -638,13 +639,13 @@
 
             if (!data) {
                 return (
-                    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-8 font-sans">
-                        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
-                            <div className="bg-blue-100 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6"><UploadIcon className="text-blue-600" /></div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">データを読み込む</h2>
-                            <p className="text-slate-500 mb-8">一口馬主のJSONデータ（data-sm.json）を選択してください。<br/><span className="text-xs text-slate-400">※データはブラウザ内でのみ処理されます</span></p>
-                            <label className="block w-full group cursor-pointer"><div className="flex items-center justify-center w-full px-6 py-4 border-2 border-blue-500 border-dashed rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors"><span className="text-blue-600 font-semibold">ファイルを選択</span></div><input type="file" accept=".json" onChange={handleFileUpload} className="hidden" /></label>
-                        </div>
+                    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+                        <input 
+                            type="file" 
+                            accept=".json" 
+                            onChange={handleFileUpload} 
+                            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                        />
                     </div>
                 );
             }
