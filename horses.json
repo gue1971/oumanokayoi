@@ -44,30 +44,30 @@
     },
     {
       "name": "ルージュフラッパー",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2024,
-      "horse_id": "tosara_2936",
+      "horse_id": "tokyo_2936",
       "status": "active"
     },
     {
       "name": "レッドアブソルート",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2024,
-      "horse_id": "tosara_2919",
+      "horse_id": "tokyo_2919",
       "status": "active"
     },
     {
       "name": "レッドゲレーロ",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2024,
-      "horse_id": "tosara_2946",
+      "horse_id": "tokyo_2946",
       "status": "active"
     },
     {
       "name": "レッドシーカー",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2024,
-      "horse_id": "tosara_2947",
+      "horse_id": "tokyo_2947",
       "status": "active"
     },
     {
@@ -100,37 +100,37 @@
     },
     {
       "name": "ルージュアリスタ",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2023,
-      "horse_id": "tosara_2803",
+      "horse_id": "tokyo_2803",
       "status": "active"
     },
     {
       "name": "レッドレグルス",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2023,
-      "horse_id": "tosara_2828",
+      "horse_id": "tokyo_2828",
       "status": "active"
     },
     {
       "name": "ルージュソムニウム",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2023,
-      "horse_id": "tosara_2835",
+      "horse_id": "tokyo_2835",
       "status": "active"
     },
     {
       "name": "ルージュウラヌス",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2023,
-      "horse_id": "tosara_2837",
+      "horse_id": "tokyo_2837",
       "status": "active"
     },
     {
       "name": "ルージュビバーチェ",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2023,
-      "horse_id": "tosara_2852",
+      "horse_id": "tokyo_2852",
       "status": "active"
     },
     {
@@ -156,37 +156,37 @@
     },
     {
       "name": "レッドベルダンス",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2022,
-      "horse_id": "tosara_2710",
+      "horse_id": "tokyo_2710",
       "status": "active"
     },
     {
       "name": "ルージュメアート",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2022,
-      "horse_id": "tosara_2725",
+      "horse_id": "tokyo_2725",
       "status": "retired"
     },
     {
       "name": "レッドギフテッド",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2022,
-      "horse_id": "tosara_2729",
+      "horse_id": "tokyo_2729",
       "status": "retired"
     },
     {
       "name": "レッドヴィヴァン",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2022,
-      "horse_id": "tosara_2731",
+      "horse_id": "tokyo_2731",
       "status": "retired"
     },
     {
       "name": "ルージュミステリオ",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2022,
-      "horse_id": "tosara_2740",
+      "horse_id": "tokyo_2740",
       "status": "active"
     },
     {
@@ -197,7 +197,7 @@
       "status": "active"
     },
     {
-      "name": "モンタンレーヴ",
+      "name": "モンタンヴェール",
       "club": "carrot",
       "birth_year": 2021,
       "horse_id": "carrot_21025",
@@ -226,9 +226,9 @@
     },
     {
       "name": "レッドスフェーン",
-      "club": "tosara",
+      "club": "tokyo",
       "birth_year": 2021,
-      "horse_id": "tosara_2616",
+      "horse_id": "tokyo_2616",
       "status": "retired"
     },
     {
@@ -296,16 +296,16 @@
     },
     {
       "name": "フェイダウェイ",
-      "club": "norm",
+      "club": "normandy",
       "birth_year": 2018,
-      "horse_id": "norm_2018028",
+      "horse_id": "normandy_2018028",
       "status": "retired"
     },
     {
       "name": "エストラテーガ",
-      "club": "norm",
+      "club": "normandy",
       "birth_year": 2018,
-      "horse_id": "norm_2018030",
+      "horse_id": "normandy_2018030",
       "status": "retired"
     },
     {
