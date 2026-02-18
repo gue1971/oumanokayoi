@@ -64,6 +64,19 @@
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
         }
+        .tight-table th,
+        .tight-table td {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        .tight-table th:not(.memo-col),
+        .tight-table td:not(.memo-col) {
+            width: 1%;
+        }
+        .tight-table .memo-col {
+            width: auto;
+            min-width: 18rem;
+        }
     </style>
 </head>
 <body>
@@ -119,8 +132,11 @@
         const Plus = (props) => (
             <IconBase {...props}><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></IconBase>
         );
-        const Download = (props) => (
-            <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>
+        const ExportIcon = (props) => (
+            <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 14 12 9 17 14"/><line x1="12" x2="12" y1="21" y2="9"/></IconBase>
+        );
+        const ImportIcon = (props) => (
+            <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>
         );
 
         // --- Constants & Config ---
@@ -214,7 +230,7 @@
             const [selectedHorse, setSelectedHorse] = useState(null);
             
             // Edit Mode States
-            const [editSubTab, setEditSubTab] = useState('transactions'); 
+            const [editSubTab, setEditSubTab] = useState('horses'); 
             const [isTxModalOpen, setIsTxModalOpen] = useState(false);
             const [isHorseModalOpen, setIsHorseModalOpen] = useState(false);
             const [editingTx, setEditingTx] = useState(null);
@@ -300,7 +316,7 @@
                 const hh = String(now.getHours()).padStart(2, '0');
                 const min = String(now.getMinutes()).padStart(2, '0');
                 // Windowsではコロン(:)がファイル名に使用できないためハイフン(-)を使用
-                link.download = `ka${yyyy}-${mm}-${dd}-${hh}-${min}.json`;
+                link.download = `kayoi_${yyyy}-${mm}-${dd}-${hh}-${min}.json`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -714,14 +730,14 @@
                         <div className="flex-1 overflow-hidden flex flex-col p-4 md:p-8">
                             <div className="max-w-7xl mx-auto w-full flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    <table className="w-full text-sm text-left relative border-collapse whitespace-nowrap">
+                                    <table className="tight-table w-full text-sm text-left relative border-collapse whitespace-nowrap">
                                         <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                                            <tr><th className="px-6 py-3 w-32 bg-slate-50 whitespace-nowrap">年月</th><th className="px-4 py-3 bg-slate-50 w-24 whitespace-nowrap">項目</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">支出</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">収入</th><th className="px-6 py-3 bg-slate-50 w-full">メモ</th></tr>
+                                            <tr><th className="px-6 py-3 w-32 bg-slate-50 whitespace-nowrap">年月</th><th className="px-4 py-3 bg-slate-50 w-24 whitespace-nowrap">項目</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">支出</th><th className="px-6 py-3 text-right w-28 bg-slate-50 whitespace-nowrap">収入</th><th className="memo-col px-6 py-3 bg-slate-50 w-full">メモ</th></tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {[...selectedHorseData.txs].reverse().map((tx, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="px-6 py-3 font-medium text-slate-700">{tx.period_ym}</td><td className="px-4 py-3 text-slate-700">{tx.raw_label}</td><td className="px-6 py-3 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-3 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-3 text-slate-500 text-xs truncate max-w-0" title={tx.memo}>{tx.memo}</td>
+                                                    <td className="px-6 py-3 font-medium text-slate-700">{tx.period_ym}</td><td className="px-4 py-3 text-slate-700">{tx.raw_label}</td><td className="px-6 py-3 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-3 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="memo-col px-6 py-3 text-slate-500 text-xs truncate max-w-[560px]" title={tx.memo}>{tx.memo}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -739,7 +755,10 @@
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex justify-between h-16">
                                 <div className="flex items-center"><span className="font-bold text-xl tracking-tight">おウマのかよい</span></div>
-                                <div className="flex items-center space-x-4"><button onClick={() => setData(null)} className="text-sm text-slate-500 hover:text-slate-800 flex items-center"><X className="w-4 h-4 mr-1" /> ファイル解除</button></div>
+                                <div className="flex items-center space-x-4">
+                                    <button onClick={() => setData(null)} className="text-sm text-slate-500 hover:text-slate-800 flex items-center"><ImportIcon className="w-4 h-4 mr-1" /> Inport</button>
+                                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export</button>
+                                </div>
                             </div>
                         </div>
                     </header>
@@ -750,7 +769,6 @@
                                 <button onClick={() => setActiveTab('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>クラブ明細</button>
                                 <button onClick={() => setActiveTab('manage')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center ${activeTab === 'manage' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}><Edit className="w-4 h-4 mr-1"/> 台帳</button>
                             </div>
-                            <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><Download className="w-4 h-4 mr-2" /> 保存</button>
                         </div>
 
                         {activeTab === 'horses' && (
@@ -788,7 +806,7 @@
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                        <table className="tight-table w-full text-sm text-left whitespace-nowrap relative border-collapse">
                                             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                                                 <tr><th className="px-6 py-4 bg-slate-50">馬名</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th onClick={() => toggleHorseSort('balance')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">収支</th><th onClick={() => toggleHorseSort('recoveryRate')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">回収率</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
                                             </thead>
@@ -833,16 +851,16 @@
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                        <table className="tight-table w-full text-sm text-left whitespace-nowrap relative border-collapse">
                                             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                                                <tr>{!filterYear && !filterSingleMonth && <th className="px-6 py-4 w-24 bg-slate-50">年月</th>}{filterClub === 'all' && <th className="px-6 py-4 w-28 bg-slate-50">クラブ</th>}<th className="px-6 py-4 min-w-[150px] bg-slate-50">対象馬</th><th className="px-4 py-4 w-24 bg-slate-50">項目</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">支出</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">収入</th><th className="px-6 py-4 w-full bg-slate-50">メモ</th></tr>
+                                                <tr>{!filterYear && !filterSingleMonth && <th className="px-6 py-4 w-24 bg-slate-50">年月</th>}{filterClub === 'all' && <th className="px-6 py-4 w-28 bg-slate-50">クラブ</th>}<th className="px-6 py-4 min-w-[150px] bg-slate-50">対象馬</th><th className="px-4 py-4 w-24 bg-slate-50">項目</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">支出</th><th className="px-6 py-4 text-right w-[80px] bg-slate-50">収入</th><th className="memo-col px-6 py-4 w-full bg-slate-50">メモ</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {monthlyReport.transactions.map((tx) => {
                                                     const horse = data.horses.find(h => h.horse_id === tx.horse_id);
                                                     return (
                                                         <tr key={tx.uniqueId} className="hover:bg-slate-50 transition-colors">
-                                                            {!filterYear && !filterSingleMonth && <td className="px-6 py-4 text-slate-600">{tx.period_ym}</td>}{filterClub === 'all' && <td className="px-6 py-4"><div className="inline-flex px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600"><ClubDisplay club={tx.club} /></div></td>}<td className="px-6 py-4 font-medium text-slate-800">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-4 text-slate-600">{tx.raw_label}</td><td className="px-6 py-4 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-slate-500 text-xs truncate max-w-0" title={tx.memo}>{tx.memo}</td>
+                                                            {!filterYear && !filterSingleMonth && <td className="px-6 py-4 text-slate-600">{tx.period_ym}</td>}{filterClub === 'all' && <td className="px-6 py-4"><div className="inline-flex px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600"><ClubDisplay club={tx.club} /></div></td>}<td className="px-6 py-4 font-medium text-slate-800">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-4 text-slate-600">{tx.raw_label}</td><td className="px-6 py-4 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="memo-col px-6 py-4 text-slate-500 text-xs truncate max-w-[560px]" title={tx.memo}>{tx.memo}</td>
                                                         </tr>
                                                     );
                                                 })}
@@ -856,26 +874,25 @@
                         {activeTab === 'manage' && (
                             <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
                                 <div className="flex gap-4 shrink-0 items-center">
-                                    <div className="flex p-1 bg-slate-100 rounded-lg shrink-0"><button onClick={() => setEditSubTab('transactions')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'transactions' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>明細リスト</button><button onClick={() => setEditSubTab('horses')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'horses' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>愛馬リスト</button></div>
+                                    <div className="flex p-1 bg-slate-100 rounded-lg shrink-0"><button onClick={() => setEditSubTab('horses')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'horses' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>馬</button><button onClick={() => setEditSubTab('transactions')} className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${editSubTab === 'transactions' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}>明細</button></div>
                                     
                                     {editSubTab === 'transactions' && (
                                         <div className="flex items-center gap-3 text-sm bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm whitespace-nowrap overflow-hidden">
-                                            <div className="flex items-center gap-1"><span className="text-xs text-slate-400">支出</span><span className="font-bold text-red-500">{fmtNum(manageSummary.out)}</span></div>
+                                            <div className="flex items-center gap-1"><span className="font-bold text-red-500">{fmtNum(manageSummary.out)}</span></div>
                                             <div className="w-px h-3 bg-slate-200"></div>
-                                            <div className="flex items-center gap-1"><span className="text-xs text-slate-400">収入</span><span className="font-bold text-blue-600">{fmtNum(manageSummary.in)}</span></div>
+                                            <div className="flex items-center gap-1"><span className="font-bold text-blue-600">{fmtNum(manageSummary.in)}</span></div>
                                         </div>
                                     )}
 
-                                    <button onClick={() => { if(editSubTab === 'transactions') { setEditingTx(null); setIsTxModalOpen(true); } else { setEditingHorse(null); setIsHorseModalOpen(true); }}} className="ml-auto flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold shrink-0 whitespace-nowrap"><Plus className="w-4 h-4 mr-1"/> 新規追加</button>
+                                    <button onClick={() => { if(editSubTab === 'transactions') { setEditingTx(null); setIsTxModalOpen(true); } else { setEditingHorse(null); setIsHorseModalOpen(true); }}} className="ml-auto flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold shrink-0 whitespace-nowrap"><Plus className="w-4 h-4 mr-1"/> 追加</button>
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                        <table className="tight-table w-full text-sm text-left whitespace-nowrap relative border-collapse">
                                             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                                                 <tr>
                                                     {editSubTab === 'transactions' ? (
                                                         <>
-                                                            <th className="px-4 py-3 bg-slate-50 min-w-[70px]">操作</th>
                                                             <th className="px-4 py-3 bg-slate-50">
                                                                 <div>発行日</div>
                                                                 <select className="header-select" value={manageFilters.issueDate} onChange={e => setManageFilters({...manageFilters, issueDate: e.target.value})}>
@@ -913,16 +930,17 @@
                                                                 </select>
                                                             </th>
                                                             <th className="px-4 py-3 bg-slate-50 text-right">金額</th>
-                                                            <th className="px-4 py-3 bg-slate-50">メモ</th>
+                                                            <th className="memo-col px-4 py-3 bg-slate-50">メモ</th>
+                                                            <th className="px-4 py-3 bg-slate-50 min-w-[70px]">操作</th>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <th className="px-6 py-4 bg-slate-50">操作</th>
-                                                            <th className="px-6 py-4 bg-slate-50">状態</th>
                                                             <th className="px-6 py-4 bg-slate-50">馬名</th>
-                                                            <th className="px-6 py-4 bg-slate-50">クラブ</th>
                                                             <th className="px-6 py-4 bg-slate-50">生年</th>
+                                                            <th className="px-6 py-4 bg-slate-50">クラブ</th>
+                                                            <th className="px-6 py-4 bg-slate-50">状態</th>
                                                             <th className="px-6 py-4 bg-slate-50">ID</th>
+                                                            <th className="px-6 py-4 bg-slate-50">操作</th>
                                                         </>
                                                     )}
                                                 </tr>
@@ -933,24 +951,25 @@
                                                         const horse = data.horses.find(h => h.horse_id === tx.horse_id);
                                                         return (
                                                             <tr key={tx.uniqueId} className="hover:bg-slate-50">
-                                                                <td className="px-4 py-3 flex gap-2"><button onClick={() => { setEditingTx(tx.originalRef); setIsTxModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteTransaction(tx.originalRef)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td><td className="px-4 py-3 text-slate-600">{tx.issue_date}</td><td className="px-4 py-3 text-slate-600">{tx.period_ym}</td><td className="px-4 py-3 text-slate-600"><ClubDisplay club={tx.club} /></td><td className="px-4 py-3 font-medium">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-3">{tx.raw_label}</td><td className={`px-4 py-3 text-right font-bold ${tx.direction === 'in' ? 'text-blue-600' : tx.direction === 'adj' ? 'text-emerald-600' : 'text-red-500'}`}>{fmtNum(tx.amount_yen)}</td><td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{tx.memo}</td>
+                                                                <td className="px-4 py-3 text-slate-600">{tx.issue_date}</td><td className="px-4 py-3 text-slate-600">{tx.period_ym}</td><td className="px-4 py-3 text-slate-600"><ClubDisplay club={tx.club} /></td><td className="px-4 py-3 font-medium">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-3">{tx.raw_label}</td><td className={`px-4 py-3 text-right font-bold ${tx.direction === 'in' ? 'text-blue-600' : tx.direction === 'adj' ? 'text-emerald-600' : 'text-red-500'}`}>{fmtNum(tx.amount_yen)}</td><td className="memo-col px-4 py-3 text-xs text-slate-500 max-w-[560px] truncate">{tx.memo}</td><td className="px-4 py-3 flex gap-2"><button onClick={() => { setEditingTx(tx.originalRef); setIsTxModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteTransaction(tx.originalRef)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
                                                             </tr>
                                                         );
                                                     })
                                                 ) : (
                                                     horseStats.map((horse) => (
                                                         <tr key={horse.uniqueKey} className="hover:bg-slate-50">
-                                                            <td className="px-6 py-4 flex gap-2"><button onClick={() => { setEditingHorse(horse); setIsHorseModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteHorse(horse)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
+                                                            <td className="px-6 py-4 font-bold">{horse.name}</td>
+                                                            <td className="px-6 py-4">{horse.birth_year}</td>
+                                                            <td className="px-6 py-4 text-slate-600">
+                                                                <ClubDisplay club={horse.club} />
+                                                            </td>
                                                             <td className="px-6 py-4">
                                                                 <span className={`px-2 py-1 text-xs rounded-full ${horse.status === 'retired' ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-700'}`}>
                                                                     {horse.status === 'retired' ? '引退' : '現役'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 font-bold">{horse.name}</td>
-                                                            <td className="px-6 py-4 text-slate-600">
-                                                                <ClubDisplay club={horse.club} />
-                                                            </td>
-                                                            <td className="px-6 py-4">{horse.birth_year}</td><td className="px-6 py-4 text-xs text-slate-400 font-mono">{horse.horse_id}</td>
+                                                            <td className="px-6 py-4 text-xs text-slate-400 font-mono">{horse.horse_id}</td>
+                                                            <td className="px-6 py-4 flex gap-2"><button onClick={() => { setEditingHorse(horse); setIsHorseModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteHorse(horse)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
                                                         </tr>
                                                     ))
                                                 )}
