@@ -333,14 +333,28 @@
                 setLoading(true);
                 setLoadError('');
                 try {
-                    const [horsesRes, txRes] = await Promise.all([
-                        fetch('./horses.json', { cache: 'no-store' }),
-                        fetch('./transactions.json', { cache: 'no-store' }),
-                    ]);
-                    if (!horsesRes.ok || !txRes.ok) {
-                        throw new Error('horses.json / transactions.json の取得に失敗しました');
+                    const horseSources = [
+                        'https://raw.githubusercontent.com/gue1971/shared-horses-data/main/horses.json',
+                        './horses.json',
+                    ];
+
+                    let horsesDoc = null;
+                    for (const src of horseSources) {
+                        try {
+                            const res = await fetch(src, { cache: 'no-store' });
+                            if (!res.ok) continue;
+                            horsesDoc = await res.json();
+                            break;
+                        } catch (_) {
+                            // try next source
+                        }
                     }
-                    const [horsesDoc, txDoc] = await Promise.all([horsesRes.json(), txRes.json()]);
+
+                    const txRes = await fetch('./transactions.json', { cache: 'no-store' });
+                    if (!horsesDoc || !txRes.ok) {
+                        throw new Error('horses.json(shared-horses-data優先) / transactions.json の取得に失敗しました');
+                    }
+                    const txDoc = await txRes.json();
                     const normalized = normalizeIncomingData({
                         horses: Array.isArray(horsesDoc) ? horsesDoc : horsesDoc.horses,
                         transactions: Array.isArray(txDoc) ? txDoc : txDoc.transactions,
