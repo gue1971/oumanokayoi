@@ -66,16 +66,16 @@
         }
         .tight-table th,
         .tight-table td {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
         .tight-table th:not(.memo-col),
         .tight-table td:not(.memo-col) {
-            width: 1%;
+            width: 1% !important;
         }
         .tight-table .memo-col {
-            width: auto;
-            min-width: 18rem;
+            width: auto !important;
+            min-width: 18rem !important;
         }
     </style>
 </head>
@@ -230,7 +230,7 @@
             const [selectedHorse, setSelectedHorse] = useState(null);
             
             // Edit Mode States
-            const [editSubTab, setEditSubTab] = useState('horses'); 
+            const [editSubTab, setEditSubTab] = useState('transactions'); 
             const [isTxModalOpen, setIsTxModalOpen] = useState(false);
             const [isHorseModalOpen, setIsHorseModalOpen] = useState(false);
             const [editingTx, setEditingTx] = useState(null);
@@ -467,20 +467,15 @@
                     }
                 }
 
-                return filtered.sort((a, b) => {
-                    if (a.period_ym !== b.period_ym) return b.period_ym.localeCompare(a.period_ym);
+                return [...filtered].sort((a, b) => {
+                    if (a.issue_date !== b.issue_date) return (b.issue_date || '').localeCompare(a.issue_date || '');
+                    if (a.period_ym !== b.period_ym) return (b.period_ym || '').localeCompare(a.period_ym || '');
                     const clubA = CLUB_ORDER.indexOf(a.club);
                     const clubB = CLUB_ORDER.indexOf(b.club);
                     if (clubA !== clubB) return clubA - clubB;
-                    const horseA = data.horses.find(h => h.horse_id === a.horse_id);
-                    const horseB = data.horses.find(h => h.horse_id === b.horse_id);
-                    if (!horseA && horseB) return 1;
-                    if (horseA && !horseB) return -1;
-                    if (horseA && horseB) {
-                        if (horseA.birth_year !== horseB.birth_year) return horseA.birth_year - horseB.birth_year;
-                        return horseA.name.localeCompare(horseB.name);
-                    }
-                    return getItemOrderIndex(a.raw_label) - getItemOrderIndex(b.raw_label);
+                    const horseIdA = a.horse_id || 'zzzzzzzz';
+                    const horseIdB = b.horse_id || 'zzzzzzzz';
+                    return horseIdA.localeCompare(horseIdB);
                 });
             }, [data, manageFilters]);
 
@@ -636,7 +631,7 @@
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-sm font-medium text-slate-700 mb-1">クラブ</label><select className="w-full border rounded p-2" value={form.club} onChange={e => handleTargetChange('club', e.target.value)}>{Object.keys(CLUB_NAMES).map(k => <option key={k} value={k}>{CLUB_NAMES[k]}</option>)}</select></div>
-                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">対象馬</label><select className="w-full border rounded p-2" value={form.horse_id || ''} onChange={e => handleTargetChange('horse_id', e.target.value)}><option value="">（会費・その他）</option>{clubHorses.map(h => <option key={h.horse_id} value={h.horse_id}>{h.name}</option>)}</select></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">対象馬</label><select className="w-full border rounded p-2" value={form.horse_id || ''} onChange={e => handleTargetChange('horse_id', e.target.value)}><option value="">（会費・その他）</option><optgroup label="現役">{clubHorses.filter(h => h.status !== 'retired').map(h => <option key={h.horse_id} value={h.horse_id}>{h.name}</option>)}</optgroup><optgroup label="引退">{clubHorses.filter(h => h.status === 'retired').map(h => <option key={h.horse_id} value={h.horse_id}>{h.name}</option>)}</optgroup></select></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-sm font-medium text-slate-700 mb-1">項目</label><select required className="w-full border rounded p-2" value={form.raw_label} onChange={e => handleItemChange(e.target.value)}>{availableItems.map(item => <option key={item} value={item}>{item}</option>)}</select></div>
@@ -756,7 +751,7 @@
                             <div className="flex justify-between h-16">
                                 <div className="flex items-center"><span className="font-bold text-xl tracking-tight">おウマのかよい</span></div>
                                 <div className="flex items-center space-x-4">
-                                    <button onClick={() => setData(null)} className="text-sm text-slate-500 hover:text-slate-800 flex items-center"><ImportIcon className="w-4 h-4 mr-1" /> Inport</button>
+                                    <button onClick={() => setData(null)} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ImportIcon className="w-4 h-4 mr-2" /> Inport</button>
                                     <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export</button>
                                 </div>
                             </div>
@@ -806,20 +801,20 @@
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="flex-1 overflow-auto custom-scrollbar">
-                                        <table className="tight-table w-full min-w-[980px] text-sm text-left whitespace-nowrap relative border-collapse">
+                                        <table className="tight-table w-max min-w-full text-sm text-left whitespace-nowrap relative border-collapse">
                                             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                                                <tr><th className="px-6 py-4 bg-slate-50 sticky left-0 z-30 shadow-[2px_0_0_0_rgb(226_232_240)]">馬名</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th onClick={() => toggleHorseSort('recoveryRate')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">回収率</th><th onClick={() => toggleHorseSort('balance')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">収支</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
+                                                <tr><th className="px-6 py-4 bg-slate-50 sticky left-0 z-30 shadow-[2px_0_0_0_rgb(226_232_240)]">馬名</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th onClick={() => toggleHorseSort('recoveryRate')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">回収率</th><th onClick={() => toggleHorseSort('balance')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">収支</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {filteredHorseStats.map((horse) => (
                                                     <tr key={horse.uniqueKey} onClick={() => setSelectedHorse(horse)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
                                                         <td className="px-6 py-4 font-bold text-slate-800 group-hover:text-blue-600 sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[2px_0_0_0_rgb(241_245_249)]">{horse.name}</td>
-                                                        <td className="px-6 py-4 text-center text-slate-500">{horse.birth_year}</td>
                                                         <td className="px-6 py-4 text-slate-600">
                                                             <ClubDisplay club={horse.club} />
                                                         </td>
                                                         <td className={`px-6 py-4 text-right font-medium ${horse.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{horse.recoveryRate.toFixed(1)}%</td>
                                                         <td className={`px-6 py-4 text-right font-bold ${horse.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(horse.balance)}</td>
+                                                        <td className="px-6 py-4 text-center text-slate-500">{horse.birth_year}</td>
                                                         <td className="px-6 py-4 text-right text-slate-400 text-xs">{horse.lastTxDate}</td>
                                                     </tr>
                                                 ))}
@@ -872,7 +867,7 @@
                                                     const horse = data.horses.find(h => h.horse_id === tx.horse_id);
                                                     return (
                                                         <tr key={tx.uniqueId} className="hover:bg-slate-50 transition-colors">
-                                                            {!filterYear && !filterSingleMonth && <td className="px-6 py-4 text-slate-600">{tx.period_ym}</td>}{filterClub === 'all' && <td className="px-6 py-4"><div className="inline-flex px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600"><ClubDisplay club={tx.club} /></div></td>}<td className="px-6 py-4 font-medium text-slate-800">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-4 text-slate-600">{tx.raw_label}</td><td className="px-6 py-4 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="memo-col px-6 py-4 text-slate-500 text-xs truncate max-w-[560px]" title={tx.memo}>{tx.memo}</td>
+                                                            {!filterYear && !filterSingleMonth && <td className="px-6 py-4 text-slate-600">{tx.period_ym}</td>}{filterClub === 'all' && <td className="px-6 py-4 text-slate-600"><ClubDisplay club={tx.club} /></td>}<td className="px-6 py-4 font-medium text-slate-800">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-4 text-slate-600">{tx.raw_label}</td><td className="px-6 py-4 text-right font-normal text-red-500">{tx.direction === 'out' ? fmtNum(tx.amount_yen) : ''}</td><td className="px-6 py-4 text-right font-normal text-blue-600">{tx.direction === 'in' ? fmtNum(tx.amount_yen) : ''}</td><td className="memo-col px-6 py-4 text-slate-500 text-xs truncate max-w-[560px]" title={tx.memo}>{tx.memo}</td>
                                                         </tr>
                                                     );
                                                 })}
