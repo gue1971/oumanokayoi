@@ -1,0 +1,403 @@
+{
+  "horses": [
+    {
+      "name": "ファシネートゼット24",
+      "club": "carrot",
+      "birth_year": 2024,
+      "horse_id": "carrot_24040",
+      "status": "active"
+    },
+    {
+      "name": "レシステンシア24",
+      "club": "carrot",
+      "birth_year": 2024,
+      "horse_id": "carrot_24062",
+      "status": "active"
+    },
+    {
+      "name": "クラシックリディア24",
+      "club": "carrot",
+      "birth_year": 2024,
+      "horse_id": "carrot_24072",
+      "status": "active"
+    },
+    {
+      "name": "ジルファノーガ",
+      "club": "silk",
+      "birth_year": 2024,
+      "horse_id": "silk_2024043",
+      "status": "active"
+    },
+    {
+      "name": "ベリルアンヴォル",
+      "club": "silk",
+      "birth_year": 2024,
+      "horse_id": "silk_2024058",
+      "status": "active"
+    },
+    {
+      "name": "ウインアルカンナの24",
+      "club": "win",
+      "birth_year": 2024,
+      "horse_id": "win_20240002",
+      "status": "active"
+    },
+    {
+      "name": "ルージュフラッパー",
+      "club": "tosara",
+      "birth_year": 2024,
+      "horse_id": "tosara_2936",
+      "status": "active"
+    },
+    {
+      "name": "レッドアブソルート",
+      "club": "tosara",
+      "birth_year": 2024,
+      "horse_id": "tosara_2919",
+      "status": "active"
+    },
+    {
+      "name": "レッドゲレーロ",
+      "club": "tosara",
+      "birth_year": 2024,
+      "horse_id": "tosara_2946",
+      "status": "active"
+    },
+    {
+      "name": "レッドシーカー",
+      "club": "tosara",
+      "birth_year": 2024,
+      "horse_id": "tosara_2947",
+      "status": "active"
+    },
+    {
+      "name": "パッセージピーク",
+      "club": "carrot",
+      "birth_year": 2023,
+      "horse_id": "carrot_23039",
+      "status": "active"
+    },
+    {
+      "name": "ガルディエンヌ",
+      "club": "carrot",
+      "birth_year": 2023,
+      "horse_id": "carrot_23065",
+      "status": "active"
+    },
+    {
+      "name": "ウイングリフィス",
+      "club": "win",
+      "birth_year": 2023,
+      "horse_id": "win_20230033",
+      "status": "active"
+    },
+    {
+      "name": "ウインサルーテ",
+      "club": "win",
+      "birth_year": 2023,
+      "horse_id": "win_20230037",
+      "status": "active"
+    },
+    {
+      "name": "ルージュアリスタ",
+      "club": "tosara",
+      "birth_year": 2023,
+      "horse_id": "tosara_2803",
+      "status": "active"
+    },
+    {
+      "name": "レッドレグルス",
+      "club": "tosara",
+      "birth_year": 2023,
+      "horse_id": "tosara_2828",
+      "status": "active"
+    },
+    {
+      "name": "ルージュソムニウム",
+      "club": "tosara",
+      "birth_year": 2023,
+      "horse_id": "tosara_2835",
+      "status": "active"
+    },
+    {
+      "name": "ルージュウラヌス",
+      "club": "tosara",
+      "birth_year": 2023,
+      "horse_id": "tosara_2837",
+      "status": "active"
+    },
+    {
+      "name": "ルージュビバーチェ",
+      "club": "tosara",
+      "birth_year": 2023,
+      "horse_id": "tosara_2852",
+      "status": "active"
+    },
+    {
+      "name": "サザリーバスター",
+      "club": "carrot",
+      "birth_year": 2022,
+      "horse_id": "carrot_22012",
+      "status": "retired"
+    },
+    {
+      "name": "ストラーダレアーレ",
+      "club": "carrot",
+      "birth_year": 2022,
+      "horse_id": "carrot_22058",
+      "status": "retired"
+    },
+    {
+      "name": "フォンデネージュ",
+      "club": "silk",
+      "birth_year": 2022,
+      "horse_id": "silk_2022016",
+      "status": "active"
+    },
+    {
+      "name": "レッドベルダンス",
+      "club": "tosara",
+      "birth_year": 2022,
+      "horse_id": "tosara_2710",
+      "status": "active"
+    },
+    {
+      "name": "ルージュメアート",
+      "club": "tosara",
+      "birth_year": 2022,
+      "horse_id": "tosara_2725",
+      "status": "retired"
+    },
+    {
+      "name": "レッドギフテッド",
+      "club": "tosara",
+      "birth_year": 2022,
+      "horse_id": "tosara_2729",
+      "status": "retired"
+    },
+    {
+      "name": "レッドヴィヴァン",
+      "club": "tosara",
+      "birth_year": 2022,
+      "horse_id": "tosara_2731",
+      "status": "retired"
+    },
+    {
+      "name": "ルージュミステリオ",
+      "club": "tosara",
+      "birth_year": 2022,
+      "horse_id": "tosara_2740",
+      "status": "active"
+    },
+    {
+      "name": "ブレスワード",
+      "club": "carrot",
+      "birth_year": 2021,
+      "horse_id": "carrot_21020",
+      "status": "active"
+    },
+    {
+      "name": "モンタンレーヴ",
+      "club": "carrot",
+      "birth_year": 2021,
+      "horse_id": "carrot_21025",
+      "status": "retired"
+    },
+    {
+      "name": "プリュノワール",
+      "club": "silk",
+      "birth_year": 2021,
+      "horse_id": "silk_2021003",
+      "status": "active"
+    },
+    {
+      "name": "エストレヤデベレン",
+      "club": "silk",
+      "birth_year": 2021,
+      "horse_id": "silk_2021086",
+      "status": "active"
+    },
+    {
+      "name": "ウインブリエ",
+      "club": "win",
+      "birth_year": 2021,
+      "horse_id": "win_20210024",
+      "status": "retired"
+    },
+    {
+      "name": "レッドスフェーン",
+      "club": "tosara",
+      "birth_year": 2021,
+      "horse_id": "tosara_2616",
+      "status": "retired"
+    },
+    {
+      "name": "ディオファントス",
+      "club": "carrot",
+      "birth_year": 2020,
+      "horse_id": "carrot_20057",
+      "status": "retired"
+    },
+    {
+      "name": "ウインエーデル",
+      "club": "win",
+      "birth_year": 2020,
+      "horse_id": "win_20200020",
+      "status": "retired"
+    },
+    {
+      "name": "ウインシャルマン",
+      "club": "win",
+      "birth_year": 2020,
+      "horse_id": "win_20200028",
+      "status": "retired"
+    },
+    {
+      "name": "トライセイル",
+      "club": "carrot",
+      "birth_year": 2019,
+      "horse_id": "carrot_19030",
+      "status": "retired"
+    },
+    {
+      "name": "ピエドラデルーナ",
+      "club": "silk",
+      "birth_year": 2019,
+      "horse_id": "silk_2019061",
+      "status": "retired"
+    },
+    {
+      "name": "ウインリナリア",
+      "club": "win",
+      "birth_year": 2019,
+      "horse_id": "win_20190017",
+      "status": "retired"
+    },
+    {
+      "name": "カンパニュール",
+      "club": "union",
+      "birth_year": 2019,
+      "horse_id": "union_3428",
+      "status": "retired"
+    },
+    {
+      "name": "アイソスピン",
+      "club": "carrot",
+      "birth_year": 2018,
+      "horse_id": "carrot_18052",
+      "status": "retired"
+    },
+    {
+      "name": "イルデレーヴ",
+      "club": "silk",
+      "birth_year": 2018,
+      "horse_id": "silk_2018067",
+      "status": "retired"
+    },
+    {
+      "name": "フェイダウェイ",
+      "club": "norm",
+      "birth_year": 2018,
+      "horse_id": "norm_2018028",
+      "status": "retired"
+    },
+    {
+      "name": "エストラテーガ",
+      "club": "norm",
+      "birth_year": 2018,
+      "horse_id": "norm_2018030",
+      "status": "retired"
+    },
+    {
+      "name": "カドル",
+      "club": "union",
+      "birth_year": 2018,
+      "horse_id": "union_3311",
+      "status": "retired"
+    },
+    {
+      "name": "レシステンシア",
+      "club": "carrot",
+      "birth_year": 2017,
+      "horse_id": "carrot_17067",
+      "status": "retired"
+    },
+    {
+      "name": "ラウダシオン",
+      "club": "silk",
+      "birth_year": 2017,
+      "horse_id": "silk_2017062",
+      "status": "retired"
+    },
+    {
+      "name": "エスコビージャ",
+      "club": "carrot",
+      "birth_year": 2016,
+      "horse_id": "carrot_16073",
+      "status": "retired"
+    },
+    {
+      "name": "ファクトゥーラ",
+      "club": "carrot",
+      "birth_year": 2016,
+      "horse_id": "carrot_16074",
+      "status": "retired"
+    },
+    {
+      "name": "カラドゥラ",
+      "club": "carrot",
+      "birth_year": 2015,
+      "horse_id": "carrot_15011",
+      "status": "retired"
+    },
+    {
+      "name": "エイムアンドエンド",
+      "club": "carrot",
+      "birth_year": 2015,
+      "horse_id": "carrot_15019",
+      "status": "retired"
+    },
+    {
+      "name": "デューズワイルズ",
+      "club": "carrot",
+      "birth_year": 2013,
+      "horse_id": "carrot_13073",
+      "status": "retired"
+    },
+    {
+      "name": "ジーニアスダンサー",
+      "club": "carrot",
+      "birth_year": 2013,
+      "horse_id": "carrot_13077",
+      "status": "retired"
+    },
+    {
+      "name": "ストレンジクォーク",
+      "club": "carrot",
+      "birth_year": 2012,
+      "horse_id": "carrot_12034",
+      "status": "retired"
+    },
+    {
+      "name": "テンシンランマン",
+      "club": "carrot",
+      "birth_year": 2010,
+      "horse_id": "carrot_10018",
+      "status": "retired"
+    },
+    {
+      "name": "バプテスマ",
+      "club": "carrot",
+      "birth_year": 2010,
+      "horse_id": "carrot_10020",
+      "status": "retired"
+    },
+    {
+      "name": "ベストリッジライン",
+      "club": "carrot",
+      "birth_year": 2010,
+      "horse_id": "carrot_10025",
+      "status": "retired"
+    }
+  ]
+}

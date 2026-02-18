@@ -263,6 +263,20 @@
             
             // Sort State for Horses
             const [horseSortKey, setHorseSortKey] = useState('default'); // 'default', 'balance', 'recoveryRate'
+            const [loading, setLoading] = useState(true);
+            const [loadError, setLoadError] = useState('');
+
+            const normalizeIncomingData = (parsed) => {
+                const horses = Array.isArray(parsed?.horses) ? parsed.horses : [];
+                const transactions = Array.isArray(parsed?.transactions) ? parsed.transactions : [];
+                return {
+                    horses: horses.map(h => ({ ...h, status: h.status || h.career_status || 'active' })),
+                    transactions: transactions.map(tx => {
+                        if (tx.raw_label && tx.raw_label.includes('充当')) return { ...tx, direction: 'adj' };
+                        return tx;
+                    })
+                };
+            };
 
             // --- Handlers ---
 
@@ -273,54 +287,77 @@
                     reader.onload = (e) => {
                         try {
                             const parsedData = JSON.parse(e.target.result);
-                            if (parsedData.transactions) {
-                                parsedData.transactions = parsedData.transactions.map(tx => {
-                                    if (tx.raw_label && tx.raw_label.includes('充当')) {
-                                        return { ...tx, direction: 'adj' };
-                                    }
-                                    return tx;
-                                });
+                            const normalized = normalizeIncomingData(parsedData);
+                            if (!normalized.horses.length && !normalized.transactions.length) {
+                                alert('horses / transactions を含むJSONを指定してください。');
+                                return;
                             }
-                            if (parsedData.horses) {
-                                parsedData.horses = parsedData.horses.map(h => ({
-                                    ...h,
-                                    status: h.status || 'active'
-                                }));
-                            }
-                            setData(parsedData);
+                            setData(normalized);
+                            setLoadError('');
                         } catch (error) {
-                            console.error("JSON parsing error:", error);
-                            alert("ファイルの読み込みに失敗しました。");
+                            console.error('JSON parsing error:', error);
+                            alert('ファイルの読み込みに失敗しました。');
                         }
                     };
                     reader.readAsText(file);
                 }
             };
 
-            const handleDownload = () => {
-                if (!data) return;
-                const cleanData = {
-                    ...data,
-                    horses: data.horses.map(h => sanitizeHorse(h))
-                };
-                
-                const jsonString = JSON.stringify(cleanData, null, 2);
-                const blob = new Blob([jsonString], { type: 'application/json' });
+            const downloadBlob = (filename, jsonObject) => {
+                const blob = new Blob([JSON.stringify(jsonObject, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const handleDownload = () => {
+                if (!data) return;
                 const now = new Date();
                 const yyyy = now.getFullYear();
                 const mm = String(now.getMonth() + 1).padStart(2, '0');
                 const dd = String(now.getDate()).padStart(2, '0');
                 const hh = String(now.getHours()).padStart(2, '0');
                 const min = String(now.getMinutes()).padStart(2, '0');
-                // Windowsではコロン(:)がファイル名に使用できないためハイフン(-)を使用
-                link.download = `kayoi_${yyyy}-${mm}-${dd}-${hh}-${min}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const suffix = yyyy + '-' + mm + '-' + dd + '-' + hh + '-' + min;
+                const cleanHorses = data.horses.map(h => sanitizeHorse(h));
+                downloadBlob('horses_' + suffix + '.json', { horses: cleanHorses });
+                downloadBlob('transactions_' + suffix + '.json', { transactions: data.transactions });
             };
+
+            const loadInitialData = useCallback(async () => {
+                setLoading(true);
+                setLoadError('');
+                try {
+                    const [horsesRes, txRes] = await Promise.all([
+                        fetch('./horses.json', { cache: 'no-store' }),
+                        fetch('./transactions.json', { cache: 'no-store' }),
+                    ]);
+                    if (!horsesRes.ok || !txRes.ok) {
+                        throw new Error('horses.json / transactions.json の取得に失敗しました');
+                    }
+                    const [horsesDoc, txDoc] = await Promise.all([horsesRes.json(), txRes.json()]);
+                    const normalized = normalizeIncomingData({
+                        horses: Array.isArray(horsesDoc) ? horsesDoc : horsesDoc.horses,
+                        transactions: Array.isArray(txDoc) ? txDoc : txDoc.transactions,
+                    });
+                    setData(normalized);
+                } catch (err) {
+                    console.error(err);
+                    setLoadError('自動読込に失敗しました。下のImportからJSONを選択してください。');
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            }, []);
+
+            useEffect(() => {
+                loadInitialData();
+            }, [loadInitialData]);
 
             // CRUD Logic
             const addTransaction = (newTx) => {
@@ -681,9 +718,16 @@
                 );
             };
 
+            if (loading) {
+                return (
+                    <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-600 font-bold">読み込み中...</div>
+                );
+            }
+
             if (!data) {
                 return (
-                    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+                    <div className="flex flex-col gap-4 items-center justify-center min-h-screen bg-slate-50 px-4">
+                        {loadError && <div className="text-sm text-red-600">{loadError}</div>}
                         <input 
                             type="file" 
                             accept=".json" 
@@ -751,8 +795,8 @@
                             <div className="flex justify-between h-16">
                                 <div className="flex items-center"><span className="font-bold text-xl tracking-tight">おウマのかよい</span></div>
                                 <div className="flex items-center space-x-4">
-                                    <button onClick={() => setData(null)} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ImportIcon className="w-4 h-4 mr-2" /> Inport</button>
-                                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export</button>
+                                    <button onClick={() => setData(null)} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ImportIcon className="w-4 h-4 mr-2" /> Import</button>
+                                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export Split</button>
                                 </div>
                             </div>
                         </div>
