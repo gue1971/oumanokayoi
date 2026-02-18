@@ -831,16 +831,18 @@
                                 <button onClick={() => setSelectedHorse(null)} className="mb-4 flex items-center text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"><ChevronRight className="w-4 h-4 rotate-180 mr-1" /> 一覧に戻る</button>
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase flex items-center gap-1 ${
-                                                selectedHorse.club === 'carrot' ? 'bg-green-100 text-green-700' : 
-                                                selectedHorse.club === 'silk' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
-                                            }`}>
-                                                <ClubDisplay club={selectedHorse.club} className="" />
+                                        <h1 className="text-2xl font-bold text-slate-900">
+                                            {selectedHorse.name}
+                                            <span className="ml-3 inline-flex items-center gap-2 align-middle">
+                                                <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase flex items-center gap-1 ${
+                                                    selectedHorse.club === 'carrot' ? 'bg-green-100 text-green-700' : 
+                                                    selectedHorse.club === 'silk' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
+                                                }`}>
+                                                    <ClubDisplay club={selectedHorse.club} className="" />
+                                                </span>
+                                                <span className="text-sm font-medium text-slate-600">{selectedHorse.birth_year}年産</span>
                                             </span>
-                                            <span className="text-slate-500 text-xs">{selectedHorse.birth_year}年産</span>
-                                        </div>
-                                        <h1 className="text-2xl font-bold text-slate-900">{selectedHorse.name}</h1>
+                                        </h1>
                                     </div>
                                     <div className="grid grid-cols-4 gap-4 text-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                                         <div><div className="text-[10px] text-slate-400 mb-0.5">収支</div><div className={`font-bold text-lg ${selectedHorseData.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(selectedHorseData.balance)}</div></div>
@@ -888,7 +890,7 @@
                                         className="hidden"
                                     />
                                     <button onClick={() => fileInputRef.current?.click()} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ImportIcon className="w-4 h-4 mr-2" /> Import</button>
-                                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export Transactions</button>
+                                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm text-sm font-bold"><ExportIcon className="w-4 h-4 mr-2" /> Export</button>
                                 </div>
                             </div>
                         </div>
@@ -897,7 +899,7 @@
                         <div className="flex justify-between items-center mb-6 shrink-0">
                             <div className="flex space-x-1 bg-slate-200 p-1 rounded-lg">
                                 <button onClick={() => setActiveTab('horses')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'horses' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>愛馬</button>
-                                <button onClick={() => setActiveTab('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>クラブ明細</button>
+                                <button onClick={() => setActiveTab('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>クラブ</button>
                                 <button onClick={() => setActiveTab('manage')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center ${activeTab === 'manage' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}><Edit className="w-4 h-4 mr-1"/> 台帳</button>
                             </div>
                         </div>
@@ -1072,7 +1074,7 @@
                                                                     {manageUniqueOptions.horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                                                                 </select>
                                                             </th>
-                                                            <th className="px-4 py-3 bg-slate-50">
+                                                            <th className="px-4 py-3 bg-slate-50 min-w-[7em]">
                                                                 <div>項目</div>
                                                                 <select className="header-select" value={manageFilters.item} onChange={e => setManageFilters({...manageFilters, item: e.target.value})}>
                                                                     <option value="">全て</option>
@@ -1100,7 +1102,7 @@
                                                         const horse = data.horses.find(h => h.horse_id === tx.horse_id);
                                                         return (
                                                             <tr key={tx.uniqueId} className="hover:bg-slate-50">
-                                                                <td className="px-4 py-3 text-slate-600">{tx.issue_date}</td><td className="px-4 py-3 text-slate-600">{tx.period_ym}</td><td className="px-4 py-3 text-slate-600"><ClubDisplay club={tx.club} /></td><td className="px-4 py-3 font-medium">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-3">{tx.raw_label}</td><td className={`px-4 py-3 text-right font-bold ${tx.direction === 'in' ? 'text-blue-600' : tx.direction === 'adj' ? 'text-emerald-600' : 'text-red-500'}`}>{fmtNum(tx.amount_yen)}</td><td className="memo-col px-4 py-3 text-xs text-slate-500 max-w-[560px] truncate">{tx.memo}</td><td className="px-4 py-3 flex gap-2"><button onClick={() => { setEditingTx(tx.originalRef); setIsTxModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteTransaction(tx.originalRef)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
+                                                                <td className="px-4 py-3 text-slate-600">{tx.issue_date}</td><td className="px-4 py-3 text-slate-600">{tx.period_ym}</td><td className="px-4 py-3 text-slate-600"><ClubDisplay club={tx.club} /></td><td className="px-4 py-3 font-medium">{horse ? horse.name : '（会費・その他）'}</td><td className="px-4 py-3 min-w-[7em]">{tx.raw_label}</td><td className={`px-4 py-3 text-right font-bold ${tx.direction === 'in' ? 'text-blue-600' : tx.direction === 'adj' ? 'text-emerald-600' : 'text-red-500'}`}>{fmtNum(tx.amount_yen)}</td><td className="memo-col px-4 py-3 text-xs text-slate-500 max-w-[560px] truncate">{tx.memo}</td><td className="px-4 py-3 flex gap-2"><button onClick={() => { setEditingTx(tx.originalRef); setIsTxModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button><button onClick={() => deleteTransaction(tx.originalRef)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button></td>
                                                             </tr>
                                                         );
                                                     })
