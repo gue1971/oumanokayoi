@@ -765,7 +765,7 @@
                     <main className="flex-1 overflow-hidden flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
                         <div className="flex justify-between items-center mb-6 shrink-0">
                             <div className="flex space-x-1 bg-slate-200 p-1 rounded-lg">
-                                <button onClick={() => setActiveTab('horses')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'horses' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>愛馬一覧</button>
+                                <button onClick={() => setActiveTab('horses')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'horses' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>愛馬</button>
                                 <button onClick={() => setActiveTab('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>クラブ明細</button>
                                 <button onClick={() => setActiveTab('manage')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center ${activeTab === 'manage' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}><Edit className="w-4 h-4 mr-1"/> 台帳</button>
                             </div>
@@ -805,19 +805,22 @@
                                     </div>
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <table className="tight-table w-full text-sm text-left whitespace-nowrap relative border-collapse">
+                                    <div className="flex-1 overflow-auto custom-scrollbar">
+                                        <table className="tight-table w-full min-w-[980px] text-sm text-left whitespace-nowrap relative border-collapse">
                                             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                                                <tr><th className="px-6 py-4 bg-slate-50">馬名</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th onClick={() => toggleHorseSort('balance')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">収支</th><th onClick={() => toggleHorseSort('recoveryRate')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">回収率</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
+                                                <tr><th className="px-6 py-4 bg-slate-50 sticky left-0 z-30 shadow-[2px_0_0_0_rgb(226_232_240)]">馬名</th><th className="px-6 py-4 text-center bg-slate-50">生年</th><th className="px-6 py-4 bg-slate-50">クラブ</th><th onClick={() => toggleHorseSort('recoveryRate')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">回収率</th><th onClick={() => toggleHorseSort('balance')} className="px-6 py-4 text-right bg-slate-50 cursor-pointer select-none">収支</th><th className="px-6 py-4 text-right bg-slate-50">最終更新</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {filteredHorseStats.map((horse) => (
                                                     <tr key={horse.uniqueKey} onClick={() => setSelectedHorse(horse)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
-                                                        <td className="px-6 py-4 font-bold text-slate-800 group-hover:text-blue-600">{horse.name}</td>
+                                                        <td className="px-6 py-4 font-bold text-slate-800 group-hover:text-blue-600 sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[2px_0_0_0_rgb(241_245_249)]">{horse.name}</td>
+                                                        <td className="px-6 py-4 text-center text-slate-500">{horse.birth_year}</td>
                                                         <td className="px-6 py-4 text-slate-600">
                                                             <ClubDisplay club={horse.club} />
                                                         </td>
-                                                        <td className="px-6 py-4 text-center text-slate-500">{horse.birth_year}</td><td className={`px-6 py-4 text-right font-bold ${horse.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(horse.balance)}</td><td className={`px-6 py-4 text-right font-medium ${horse.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{horse.recoveryRate.toFixed(1)}%</td><td className="px-6 py-4 text-right text-slate-400 text-xs">{horse.lastTxDate}</td>
+                                                        <td className={`px-6 py-4 text-right font-medium ${horse.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{horse.recoveryRate.toFixed(1)}%</td>
+                                                        <td className={`px-6 py-4 text-right font-bold ${horse.balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmtBalance(horse.balance)}</td>
+                                                        <td className="px-6 py-4 text-right text-slate-400 text-xs">{horse.lastTxDate}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -843,10 +846,19 @@
                                         </div>
                                         <div className="flex items-center gap-2"><Filter className="text-slate-400" /><select value={filterClub} onChange={(e) => setFilterClub(e.target.value)} className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block p-2.5"><option value="all">クラブ</option>{uniqueOptions.clubs.map(c => <option key={c} value={c}>{getClubName(c)}</option>)}</select></div>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between"><p className="text-xs text-slate-500">支出</p><p className="text-xl font-normal text-red-500">{fmtYen(monthlyReport.summary.out)}</p></div>
-                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between"><p className="text-xs text-slate-500">収入</p><p className="text-xl font-normal text-blue-600">{fmtYen(monthlyReport.summary.in)}</p></div>
-                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between"><p className="text-xs text-slate-500">収支</p><p className={`text-xl font-normal ${monthlyReport.summary.total >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{monthlyReport.summary.total > 0 && '+'}{fmtYen(monthlyReport.summary.total)}</p></div>
+                                    <div className="grid grid-cols-3 gap-2 md:gap-4">
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">支出</p>
+                                            <p className="text-xs md:text-xl font-normal text-red-500">{fmtNum(monthlyReport.summary.out)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">収入</p>
+                                            <p className="text-xs md:text-xl font-normal text-blue-600">{fmtNum(monthlyReport.summary.in)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">収支</p>
+                                            <p className={`text-xs md:text-xl font-normal ${monthlyReport.summary.total >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{monthlyReport.summary.total > 0 && '+'}{fmtNum(monthlyReport.summary.total)}円</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
