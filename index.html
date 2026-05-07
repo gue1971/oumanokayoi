@@ -580,10 +580,16 @@
             const monthlyReport = useMemo(() => {
                  const summary = filteredTransactions.reduce((acc, tx) => {
                     if (tx.direction === 'in') acc.in += tx.amount_yen;
-                    if (tx.direction === 'out') acc.out += tx.amount_yen;
+                    if (tx.direction === 'out') {
+                        acc.out += tx.amount_yen;
+                        if (tx.raw_label === '会費') acc.membershipFee += tx.amount_yen;
+                    }
                     return acc;
-                }, { in: 0, out: 0, total: 0 });
+                }, { in: 0, out: 0, membershipFee: 0, nonFeeOut: 0, total: 0, recoveryRate: 0, nonFeeRecoveryRate: 0 });
+                summary.nonFeeOut = summary.out - summary.membershipFee;
                 summary.total = summary.in - summary.out;
+                summary.recoveryRate = summary.out > 0 ? (summary.in / summary.out) * 100 : 0;
+                summary.nonFeeRecoveryRate = summary.nonFeeOut > 0 ? (summary.in / summary.nonFeeOut) * 100 : 0;
                 return {
                     transactions: filteredTransactions.map((tx, idx) => ({...tx, uniqueId: `tx-${idx}`, originalRef: tx})),
                     summary: summary
@@ -1013,6 +1019,24 @@
                                         <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
                                             <p className="text-[10px] md:text-xs text-slate-500">収支</p>
                                             <p className={`text-xs md:text-xl font-normal ${monthlyReport.summary.total >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{monthlyReport.summary.total > 0 && '+'}{fmtNum(monthlyReport.summary.total)}円</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">会費</p>
+                                            <p className="text-xs md:text-lg font-normal text-slate-700">{fmtNum(monthlyReport.summary.membershipFee)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">会費除外支出</p>
+                                            <p className="text-xs md:text-lg font-normal text-red-500">{fmtNum(monthlyReport.summary.nonFeeOut)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">実回収率</p>
+                                            <p className={`text-xs md:text-lg font-bold ${monthlyReport.summary.recoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{monthlyReport.summary.recoveryRate.toFixed(1)}%</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">会費除外回収率</p>
+                                            <p className={`text-xs md:text-lg font-bold ${monthlyReport.summary.nonFeeRecoveryRate >= 100 ? 'text-blue-600' : 'text-slate-700'}`}>{monthlyReport.summary.nonFeeRecoveryRate.toFixed(1)}%</p>
                                         </div>
                                     </div>
                                 </div>
