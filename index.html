@@ -651,6 +651,14 @@
                 return filtered;
             }, [horseStats, horseFilterStatus, horseFilterClub, horseFilterYear, horseSortKey]);
 
+            const horseListSummary = useMemo(() => {
+                return filteredHorseStats.reduce((acc, horse) => {
+                    acc.in += horse.totalIncome;
+                    acc.out += horse.totalExpense;
+                    return acc;
+                }, { in: 0, out: 0 });
+            }, [filteredHorseStats]);
+
             const toggleHorseSort = (key) => {
                 setHorseSortKey(prev => prev === key ? 'default' : key);
             };
@@ -934,6 +942,20 @@
                                                 <option value="all">生年</option>
                                                 {uniqueBirthYears.map(y => <option key={y} value={y}>{y}年産</option>)}
                                             </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 md:gap-4">
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">支出</p>
+                                            <p className="text-xs md:text-xl font-normal text-red-500">{fmtNum(horseListSummary.out)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">収入</p>
+                                            <p className="text-xs md:text-xl font-normal text-blue-600">{fmtNum(horseListSummary.in)}円</p>
+                                        </div>
+                                        <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-row items-center justify-between whitespace-nowrap">
+                                            <p className="text-[10px] md:text-xs text-slate-500">収支</p>
+                                            <p className={`text-xs md:text-xl font-normal ${horseListSummary.in - horseListSummary.out >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{horseListSummary.in - horseListSummary.out > 0 && '+'}{fmtNum(horseListSummary.in - horseListSummary.out)}円</p>
                                         </div>
                                     </div>
                                 </div>
